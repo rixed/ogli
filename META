@@ -1,0 +1,5 @@
+description = "Ocaml Graphics Library for Interfaces"
+version = "0.1"
+requires = "geom oaah"
+archive(byte) = "ogli.cma"
+archive(native) = "ogli.cmxa"

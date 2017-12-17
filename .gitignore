@@ -1,0 +1,12 @@
+.depend
+*.a
+*.o
+*.cmx
+*.cmo
+*.cma
+*.cmxa
+*.cmi
+*.annot
+*.cache
+*.log
+all_tests.*
