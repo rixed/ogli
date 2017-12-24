@@ -1,22 +1,20 @@
 open Ogli_geom
 
 (* An Ogli_geom.shape is a picture (an assemblage of colored polys).
- * Now we want to generate bigger picture according to parameters, and then
- * change the parameters and have a function that updates the picture when it
- * needs to be, and update the canvas as parsimoniously as possible.
- * So we will build a difftree of shapes, with explicit functions of parameters
- * here and there, and use the difftree to compute a sequence of commande to
- * update the canvas when parameters change:
- * First, we recompute the new tree keeping everything we can and recomputing
- * only what depends on updated parameters, then we call the diff function
- * between the former tree and the new one, building a sequence of update
- * operations (ie: nothing but a sequence of polygons to draw), that we
- * optimise and render.
- * *)
+ * Now we want to generate parameterized pictures, and then change the
+ * parameters and have a function that updates the picture when it needs to
+ * be, and update the canvas as parsimoniously as possible.  So we will build
+ * a difftree of shapes, with explicit functions of parameters here and
+ * there, and use the difftree to compute a sequence of commands to update
+ * the canvas when parameters change: First, we recompute the new tree
+ * keeping everything we can and recomputing only what depends on updated
+ * parameters, then we call the diff function between the former tree and the
+ * new one, building a sequence of update operations (ie: nothing but a
+ * sequence of polygons to draw), that we optimise and render.  *)
 
 (* The non polymorphic part of a parameter: *)
 type param_desc =
-  { name : string ;
+  { name : string ; (* TODO: get rid of this *)
     mutable last_changed : int }
 
 (* A parameter is essentially a named ref cell.
@@ -33,15 +31,27 @@ let clock =
 let make_param name value =
   { desc = { name ; last_changed = clock () } ; value }
 
-type item = Shape of shape
-          | Function of param_desc * (unit -> shape_tree list)
-and shape_tree = item Ogli_difftree.t
+let param_set p v =
+  p.desc.last_changed <- clock () ;
+  p.value <- v
+
+type shape_tree = item Ogli_difftree.t
+and item = Shape of shape
+          | Function of {
+              (* We keep a reference to the param desc so we know when
+               * the param is changed. *)
+              param : param_desc ;
+              f : (unit -> shape_tree list) ;
+              last_refresh : int }
 
 let fun_of p f =
-  let head = Function (p.desc, fun () -> f p.value) in
+  let head = Function {
+    param = p.desc ;
+    f = (fun () -> f p.value) ;
+    last_refresh = 0 } in
   Ogli_difftree.make head []
 
-let share s =
+let shape s =
   let head = Shape s in
   Ogli_difftree.make head []
 
@@ -54,17 +64,22 @@ type t =
     max_coord : Vector.t ;
     pixel_width : int ;
     pixel_height : int ;
-    background_color : Color.t }
+    background_color : Color.t ;
+    renderer : Ogli_geom.shape list -> unit }
 
 let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
          ?(pixel_width = 800) ?(pixel_height = 800)
-         ?(background_color = Color.black) () =
-  { tree = Ogli_difftree.empty [] ;
+         ?(background_color = Color.white) renderer tree =
+  { tree ;
     min_coord ; max_coord ; pixel_width ; pixel_height ;
-    last_render = 0 ; background_color }
+    last_render = 0 ; background_color ; renderer }
 
 (* Drawing commands to update the canvas: *)
 type cmd = Add of shape | Del of shape
+
+let cmd_print fmt = function
+  | Add s -> Format.fprintf fmt "Add %a" shape_print s
+  | Del s -> Format.fprintf fmt "Del %a" shape_print s
 
 let deletion t s =
   let sb = Ogli_sbbox.of_shape s in
@@ -101,15 +116,24 @@ let del item cmd =
 
 let diff = Ogli_difftree.diff del add
 
-let render t tree =
-  let last_render = clock () in
-  (*
-    (* update the shapes where params have changed: *)
-    let tree = t.tree (* TODO *) in
-  *)
+let format_list pp fmt lst =
+  Format.fprintf fmt "[" ;
+  List.iter (fun x ->
+    Format.fprintf fmt "@[%a@]@," pp x) lst ;
+  Format.fprintf fmt "]"
+
+let render t =
+  (* update the functions children whenever their param have changed: *)
+  let next_tree = Ogli_difftree.map t.tree (function
+    | Function { param ; f ; last_refresh }, key
+      when last_refresh < param.last_changed ->
+        let new_head =
+          Some (Function { param ; f ; last_refresh = clock () }, key) in
+        Some (new_head, f ())
+    | _ -> None) in
   (* Compute the drawing command required to update the canvas: *)
-  let cmds = diff t.tree tree [] in
-  t.tree <- tree ;
-  t.last_render <- last_render ;
+  let cmds = diff t.tree next_tree [] in
+  t.tree <- next_tree ;
+  t.last_render <- clock () ;
   polys_of_cmds t cmds |>
-  Ogli_compose.display
+  t.renderer

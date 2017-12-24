@@ -33,7 +33,7 @@ ogli.cma: $(OGLILIB_SOURCES:.ml=.cmo)
 	$(OCAMLC) $(OCAMLFLAGS) -a $(filter %.cmo, $^) -o $@
 
 tests/test.opt: tests/test.cmx $(top_srcdir)/ogli.cmxa
-	$(OCAMLOPT) -package "$(PACKAGES)" -I "$(top_srcdir)" ogli.cmxa -linkpkg $(OCAMLOPTFLAGS) $< -o $@
+	$(OCAMLOPT) -package "$(PACKAGES) unix" -I "$(top_srcdir)" ogli.cmxa -linkpkg $(OCAMLOPTFLAGS) $< -o $@
 
 all_tests.opt: $(LINKED_FOR_TESTS:.ml=.cmx) all_tests.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -linkpkg -package batteries,qcheck $(filter %.cmx, $^) $(filter %.ml, $^) -o $@

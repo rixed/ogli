@@ -20,5 +20,10 @@ type shape =
   { opacity : float ; color : Color.t ;
     polys : Poly.t list ; over : shape list ;
     (* We have position (TODO: and we could also have axis) so that we could
-     * move the shape with a simple operation. *)
+     * move the shape with a simple operation.
+     * This position is relative to the parent though. *)
     position : Point.t }
+
+let shape_print fmt s =
+  Format.fprintf fmt "Shape(position=%a)"
+    Point.print s.position

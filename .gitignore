@@ -9,4 +9,5 @@
 *.annot
 *.cache
 *.log
+*.opt
 all_tests.*

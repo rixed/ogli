@@ -23,8 +23,8 @@ type key = key_kind list
 let no_key = []
 
 type 'a t =
-  { head : ('a * key) option ;
-    children : 'a t list (* ordered by construction *) }
+  { mutable head : ('a * key) option ;
+    mutable children : 'a t list (* ordered by construction *) }
 
 let make ?(key=[]) v children =
   { head = Some (v, key) ; children }
@@ -106,6 +106,10 @@ and diff del add bef aft ctx =
     | None, Some (aft, _) -> add aft ctx
     | Some (bef, _), None -> del bef ctx
     | Some (bef, _), Some (aft, _) ->
+        (* With == we are going to redraw a lot of identical stuff (each
+         * time we refresh a function none of the items in its subtree will
+         * be == to the previous instance, but many may be =.
+         * TODO: provide an equality operator with the tree? *)
         if aft == bef then ctx
         else (del bef ctx |> add aft) in
   diff_children del add bef.children aft.children ctx
@@ -162,3 +166,17 @@ and diff del add bef aft ctx =
     (diff (make 1 [ make ~key:[KI 1] 2 [] ; make ~key:[KI 2] 3 [] ]) \
           (make 1 [ make 4 [] ; make ~key:[KI 2] 3 [] ]) [])
  *)
+
+(* Useful to update the tree: a function that crawl the tree (depth first)
+ * and builds a new one, persisting what can be: *)
+let rec map t f =
+  let head, children =
+    match t.head with
+    | None -> t.head, t.children
+    | Some hd ->
+        (match f hd with
+        | None -> t.head, t.children
+        | Some x -> x) in
+  { head ;
+    children = List.map (fun child ->
+        map child f) children }

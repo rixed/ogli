@@ -24,7 +24,15 @@ let merge sb sb' =
   if is_empty sb' then sb else
   List.fold_left add sb sb'.bboxes
 
+let translate v sb =
+  { bboxes = List.map (fun b -> Bbox.translate b v) sb.bboxes }
+
+(* Returns the bbox in the same space as the shape (ie. same bbox regardless
+ * if the shape position. *)
 let rec of_shape s =
   let sb = singleton (Algo.bbox s.polys) in
   List.fold_left (fun sb s' ->
-    merge sb (of_shape s')) sb s.over
+    (* We still need to position the sub-shapes bboxes: *)
+    let sb' = of_shape s' |>
+              translate s'.position in
+    merge sb sb') sb s.over
