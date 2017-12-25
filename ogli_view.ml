@@ -60,16 +60,19 @@ let shape s =
 type t =
   { mutable tree : shape_tree ;
     mutable last_render : int (* date after last render *) ;
-    min_coord : Vector.t ;
-    max_coord : Vector.t ;
+    min_coord : V.t ;
+    max_coord : V.t ;
     pixel_width : int ;
     pixel_height : int ;
-    background_color : Color.t ;
+    (* There should be no such thing as a background color.
+     * The background is undefined, and if we want one we
+     * should start by displaying a rectangle over the window. *)
+    background_color : C.t ;
     renderer : Ogli_geom.shape list -> unit }
 
 let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
          ?(pixel_width = 800) ?(pixel_height = 800)
-         ?(background_color = Color.white) renderer tree =
+         ?(background_color = C.white) renderer tree =
   { tree ;
     min_coord ; max_coord ; pixel_width ; pixel_height ;
     last_render = 0 ; background_color ; renderer }
@@ -88,7 +91,7 @@ let deletion t s =
     List.map (fun bb ->
       Path.of_bbox bb |>
       Algo.poly_of_path ~res) sb.bboxes in
-  { opacity = 1. ; color = t.background_color ;
+  { color = t.background_color ;
     polys ; over = [] ; position = s.position }
   (* TODO: also redraw everything but s, clipped by bb *)
 

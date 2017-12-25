@@ -8,7 +8,7 @@ LINKED_FOR_TESTS = \
 	ogli_difftree.ml
 
 OGLILIB_SOURCES = \
-	ogli_difftree.ml ogli_geom.ml ogli_sbbox.ml ogli_compose.ml ogli_view.ml
+	ogli_difftree.ml ogli_geom.ml ogli_sbbox.ml ogli_render.ml ogli_view.ml
 
 TESTS_SOURCES = \
 	tests/test.ml
@@ -16,8 +16,7 @@ TESTS_SOURCES = \
 SOURCES = \
 	$(OGLILIB_SOURCES) $(TESTS_SOURCES)
 
-PACKAGES = \
-	geom oaah
+PACKAGES = geom glop
 
 INSTALLED = \
 	ogli.cma ogli.cmxa $(OGLILIB_SOURCES:.ml=.cmi) $(OGLILIB_SOURCES:.ml=.cmx)

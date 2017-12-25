@@ -1,14 +1,12 @@
 open Ogli_geom
 
 (* Starting from the full display function, which is what we'd like to write: *)
-let flower ~height ~nb_leaves ~base =
+let flower ~res ~height ~nb_leaves ~base =
   let green = c 0.1 0.9 0.15
   and yellow = c 0.8 0.8 0.1 in
   Ogli_view.fun_of height (fun height ->
     (* First the stem, which depends only on the height: *)
     let stem_height = height *. 0.9 in
-    let res = height *. 0.05 |> min 3. |> max 1. in
-    Format.printf "res = %a@." K.print res ;
     let stem_width = height *. 0.01 in
     let stem =
       Path.start Point.origin |>
@@ -48,33 +46,33 @@ let flower ~height ~nb_leaves ~base =
       Path.circle ~center:(p 0. (stem_height)) radius |>
       Algo.poly_of_path ~res in
     (* Final result: *)
-    [ Ogli_view.shape { opacity = 0.5 ; color = yellow ;
+    [ Ogli_view.shape { color = yellow ;
         polys = [ bud ] ; position = base ;
         over = [
-          { opacity = 1. ; color = green ;
+          { color = green ;
             polys = stem :: leaves ; position = Point.origin ;
             over = [] } ] } ])
 
 let () =
+  (* Window size will be width*height, with (0,0) on the bottom left corner
+   * and visible triangles are counter-clockwise. *)
   let width = 800 and height = 600 in
-  let flower_height = Ogli_view.make_param "flower height" 100. in
+  let flower_height = Ogli_view.make_param "flower height" 10. in
+  let res = 0.1 in
   let flower =
-    flower ~height:flower_height ~nb_leaves:5 ~base:(p 300. 30.) in
-  let window =
-    Ogli_compose.open_window width height in
+    flower ~res ~height:flower_height ~nb_leaves:5 ~base:(p 205. 10.) in
   let renderer =
-    Ogli_compose.renderer window in
+    Ogli_render.renderer width height in
   let view =
     Ogli_view.make ~pixel_width:width ~pixel_height:height renderer flower
   in
   let rec loop h =
-    if h < 500. then (
+    if h < 1000. then (
+      Ogli_render.handle_next_event () ;
       Ogli_view.render view ;
-      let h = h +. 10. in
+      let h = h +. 2. in
       Ogli_view.param_set flower_height h ;
-      Unix.sleepf 0.1 ;
       loop h
     ) in
   loop flower_height.Ogli_view.value ;
-  ignore (Graphics.(wait_next_event [Button_down; Key_pressed])) ;
-  Ogli_compose.close_window window
+  Unix.sleep 999
