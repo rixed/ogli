@@ -8,15 +8,15 @@
  *
  * So for instance, we do not have a simple `circle x y rad col` but rather a `circle x y rad col some_state`
  *)
-open Ogli_geom
+open Ogli
 
 (* The parameter [position] is the position of the parent shape, in case
  * of [over]. *)
 let rec display_shape ?(position=Point.origin) image shape =
   let open Point.Infix in
-  List.iter (display_shape ~position:shape.position image) shape.over ;
-  Algo.translate_poly (shape.position +~ position) shape.polys |>
-  Algo.rasterize (Img.poke_scanline image shape.color shape.opacity)
+  List.iter (display_shape ~position:shape.Ogli_shape.position image) shape.Ogli_shape.over ;
+  Algo.translate_poly (shape.Ogli_shape.position +~ position) shape.Ogli_shape.polys |>
+  Algo.rasterize (Img.poke_scanline image shape.Ogli_shape.color shape.Ogli_shape.opacity)
 
 (* Good for one-shot rendering: *)
 let display_and_close ?(width=800) ?(height=600) shapes =

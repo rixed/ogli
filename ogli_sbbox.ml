@@ -3,7 +3,7 @@
  * So we will have a special bbox, called a smart-bbox, aka sbbox, that is
  * a supperposition of normal bboxes. The idea is to combine them when and
  * only when it does not save much space to keep them separated. *)
-open Ogli_geom
+open Ogli
 
 type t =
   { mutable bboxes : Bbox.t list }
@@ -26,13 +26,3 @@ let merge sb sb' =
 
 let translate v sb =
   { bboxes = List.map (fun b -> Bbox.translate b v) sb.bboxes }
-
-(* Returns the bbox in the same space as the shape (ie. same bbox regardless
- * if the shape position. *)
-let rec of_shape s =
-  let sb = singleton (Algo.bbox s.polys) in
-  List.fold_left (fun sb s' ->
-    (* We still need to position the sub-shapes bboxes: *)
-    let sb' = of_shape s' |>
-              translate s'.position in
-    merge sb sb') sb s.over

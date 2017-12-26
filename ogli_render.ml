@@ -8,7 +8,7 @@
  *
  * So for instance, we do not have a simple `circle x y rad col` but rather a `circle x y rad col some_state`
  *)
-open Ogli_geom
+open Ogli
 
 type drawable =
   { varr : G.vertex_array ; col : C.t }
@@ -44,12 +44,12 @@ let draw_poly col poly =
  * of [over]. *)
 let rec draw_shape ?(position=Point.origin) shape =
   let open Point.Infix in
-  List.iter (draw_shape ~position:shape.position) shape.over ;
-  Algo.translate_poly (shape.position +~ position) shape.polys |>
+  List.iter (draw_shape ~position:shape.Ogli_shape.position) shape.Ogli_shape.over ;
+  Algo.translate_poly (shape.Ogli_shape.position +~ position) shape.Ogli_shape.polys |>
   List.iter (fun p ->
     let tris = Algo.triangulate [p] in
     if List.for_all (fun t -> Poly.length t = 3) tris then (
-      List.iter (draw_poly (G.Uniq shape.color)) tris
+      List.iter (draw_poly (G.Uniq shape.Ogli_shape.color)) tris
     ) else (
       Format.printf "This is not a list of triangles\n" (* ;
       List.iter (Format.printf "%a\n" Poly.print) tris ;

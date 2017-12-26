@@ -1,6 +1,6 @@
-open Ogli_geom
+open Ogli
 
-(* An Ogli_geom.shape is a picture (an assemblage of colored polys).
+(* An Ogli_shape.t is a picture (an assemblage of colored polys).
  * Now we want to generate parameterized pictures, and then change the
  * parameters and have a function that updates the picture when it needs to
  * be, and update the canvas as parsimoniously as possible.  So we will build
@@ -36,7 +36,7 @@ let param_set p v =
   p.value <- v
 
 type shape_tree = item Ogli_difftree.t
-and item = Shape of shape
+and item = Shape of Ogli_shape.t
           | Function of {
               (* We keep a reference to the param desc so we know when
                * the param is changed. *)
@@ -59,6 +59,8 @@ let shape s =
 
 type t =
   { mutable tree : shape_tree ;
+    double_buffer : bool ;
+    mutable past_tree : shape_tree option ; (* if double buffer *)
     mutable last_render : int (* date after last render *) ;
     min_coord : V.t ;
     max_coord : V.t ;
@@ -68,24 +70,26 @@ type t =
      * The background is undefined, and if we want one we
      * should start by displaying a rectangle over the window. *)
     background_color : C.t ;
-    renderer : Ogli_geom.shape list -> unit }
+    renderer : Ogli_shape.t list -> unit }
 
 let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
          ?(pixel_width = 800) ?(pixel_height = 800)
-         ?(background_color = C.white) renderer tree =
-  { tree ;
+         ?(background_color = C.white) ?(double_buffer = false)
+         renderer tree =
+  { tree ; double_buffer ; past_tree = None ;
     min_coord ; max_coord ; pixel_width ; pixel_height ;
     last_render = 0 ; background_color ; renderer }
 
 (* Drawing commands to update the canvas: *)
-type cmd = Add of shape | Del of shape
+type cmd = Add of Ogli_shape.t | Del of Ogli_shape.t
 
 let cmd_print fmt = function
-  | Add s -> Format.fprintf fmt "Add %a" shape_print s
-  | Del s -> Format.fprintf fmt "Del %a" shape_print s
+  | Add s -> Format.fprintf fmt "Add %a" Ogli_shape.print s
+  | Del s -> Format.fprintf fmt "Del %a" Ogli_shape.print s
 
 let deletion t s =
-  let sb = Ogli_sbbox.of_shape s in
+  let open Ogli_shape in
+  let sb = sbbox s in
   let polys =
     let res = K.one in (* unused *)
     List.map (fun bb ->
@@ -113,6 +117,9 @@ let add item cmd =
   | Shape s -> Add s :: cmd
 
 let del item cmd =
+  (* No. We should redraw everything but this part of the tree, clipped by
+   * the bounding box of this item. Therefore, we should also be given the
+   * tree, or an iterator over its "continuation". *)
   match item with
   | Function _ -> cmd
   | Shape s -> Del s :: cmd
@@ -135,7 +142,17 @@ let render t =
         Some (new_head, f ())
     | _ -> None) in
   (* Compute the drawing command required to update the canvas: *)
-  let cmds = diff t.tree next_tree [] in
+  let cmds =
+    if t.double_buffer then (
+      let last_but_one = t.past_tree in
+      t.past_tree <- Some t.tree ;
+      match last_but_one with
+      | None -> []
+      | Some lb1 ->
+        diff lb1 next_tree []
+    ) else (
+      diff t.tree next_tree []
+    ) in
   t.tree <- next_tree ;
   t.last_render <- clock () ;
   polys_of_cmds t cmds |>

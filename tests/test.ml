@@ -1,4 +1,4 @@
-open Ogli_geom
+open Ogli
 
 (* Starting from the full display function, which is what we'd like to write: *)
 let flower ~res ~height ~nb_leaves ~base =
@@ -46,7 +46,7 @@ let flower ~res ~height ~nb_leaves ~base =
       Path.circle ~center:(p 0. (stem_height)) radius |>
       Algo.poly_of_path ~res in
     (* Final result: *)
-    [ Ogli_view.shape { color = yellow ;
+    [ Ogli_view.shape Ogli_shape.{ color = yellow ;
         polys = [ bud ] ; position = base ;
         over = [
           { color = green ;
@@ -64,7 +64,8 @@ let () =
   let renderer =
     Ogli_render.renderer width height in
   let view =
-    Ogli_view.make ~pixel_width:width ~pixel_height:height renderer flower
+    Ogli_view.make ~double_buffer:true
+                   ~pixel_width:width ~pixel_height:height renderer flower
   in
   let rec loop h =
     if h < 1000. then (

@@ -8,7 +8,8 @@ LINKED_FOR_TESTS = \
 	ogli_difftree.ml
 
 OGLILIB_SOURCES = \
-	ogli_difftree.ml ogli_geom.ml ogli_sbbox.ml ogli_render.ml ogli_view.ml
+	ogli.ml ogli_difftree.ml ogli_sbbox.ml ogli_shape.ml \
+	ogli_render.ml ogli_view.ml
 
 TESTS_SOURCES = \
 	tests/test.ml
@@ -44,7 +45,7 @@ distclean-spec:
 	$(RM) $(INSTALLED)
 
 check-spec:
-	$(RM) tests/test.opt
+	tests/test.opt
 
 include $(top_srcdir)/make.common
 
