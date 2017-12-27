@@ -51,6 +51,29 @@ let of_polys polys =
       do_render ()
     | Some Bbox.Empty -> ()
 
+let of_col_polys col_polys =
+  let renderers, bbox =
+    List.fold_left (fun (rs, bbs) (color, polys) ->
+        of_polys polys ~color :: rs,
+        Bbox.union bbs (Algo.bbox polys)
+      ) ([], Bbox.empty) col_polys in
+  let renderers = List.rev renderers in
+  let render pos bbox =
+    List.iter (fun r -> r pos bbox) renderers in
+  render, bbox
+
+let of_text text size =
+  let word = Word.make text in
+  let font_height = 30. in (* TODO *)
+  let scale = size /. font_height in
+  let polys =
+    Word.to_polys ~res:1. word |>
+    List.map (fun (pos, polys) -> Algo.translate_poly pos polys) |>
+    List.concat |>
+    Algo.scale_poly scale in
+  of_polys polys,
+  Algo.bbox polys
+
 let init ?(title="OGli") width height =
   G.init ~depth:false ~alpha:true title width height ;
   at_exit (fun () -> G.exit ()) ;

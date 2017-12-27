@@ -12,6 +12,9 @@ module Poly = Geom_shapes.Polygon (Point)
 module Path = Geom_path.Make (Point)
 module Algo = Geom_algo.Algorithms (Poly) (Path)
 
+module Glyph = Text_impl.Glyph (Poly) (Path)
+module Word = Text_impl.Word (Glyph)
+
 (* Some helper to soften the syntax of points, vectors, colors: *)
 let p (x : float) (y : float) = [| x ; y |]
 let v (x : float) (y : float) = [| x ; y |]

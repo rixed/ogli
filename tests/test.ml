@@ -1,18 +1,16 @@
 open Ogli
 
 let shape_of_polys col_polys position children =
-  let renderers, bbox =
-    List.fold_left (fun (rs, bbs) (color, polys) ->
-        Ogli_render.of_polys polys ~color :: rs,
-        Bbox.union bbs (Algo.bbox polys)
-      ) ([], Bbox.empty) col_polys in
-  let renderers = List.rev renderers in
-  let render =
-    fun pos bbox ->
-      List.iter (fun r -> r pos bbox) renderers in
+  let render, bbox = Ogli_render.of_col_polys col_polys in
   Ogli_view.shape (Ogli_shape.{ position ; render ; bbox }) children
 
-(* Starting from the full display function, which is what we'd like to write: *)
+let shape_of_text color size text position children =
+  let render, bbox = Ogli_render.of_text text size in
+  let render = render ~color in
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox }) children
+
+(* Starting from the full display function, which is what we'd like to
+ * write: *)
 let flower ~res ~height ~jiggling ~nb_leaves ~base =
   let green = c 0.1 0.9 0.15
   and yellow = c 0.8 0.8 0.1 in
@@ -84,6 +82,7 @@ let () =
       Path.rect (p 0. 0.) (p (K.of_int width) (K.of_int height)) |>
       Algo.poly_of_path ~res:K.one (* unused *) in
     shape_of_polys [ C.white, [ background ] ] Point.origin [
+      shape_of_text C.black 10. "Hello WORLD!" (p 300. 200.) [] ;
       flower ~res:0.1 ~height:flower_height ~jiggling
              ~nb_leaves:5 ~base:(p 205. 10.) ] in
   let view =
