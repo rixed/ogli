@@ -5,8 +5,9 @@ module M = G.M (* a GlMatrix of 4x4 *)
 module V = G.V
 module C = G.C
 
+(* Pt, Bb, Py, Ph, Al ? *)
 module Point = Geom_shapes.Point (V)
-module Bbox = V.Bbox
+module Bbox = Point.Bbox
 module Poly = Geom_shapes.Polygon (Point)
 module Path = Geom_path.Make (Point)
 module Algo = Geom_algo.Algorithms (Poly) (Path)

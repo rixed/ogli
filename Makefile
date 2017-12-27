@@ -8,7 +8,7 @@ LINKED_FOR_TESTS = \
 	ogli_difftree.ml
 
 OGLILIB_SOURCES = \
-	ogli.ml ogli_difftree.ml ogli_sbbox.ml ogli_shape.ml \
+	lr44.ml ogli.ml ogli_difftree.ml ogli_shape.ml \
 	ogli_render.ml ogli_view.ml
 
 TESTS_SOURCES = \

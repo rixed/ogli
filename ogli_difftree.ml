@@ -180,3 +180,11 @@ let rec map t f =
   { head ;
     children = List.map (fun child ->
         map child f) children }
+
+let rec iter_depth_first f t =
+  List.iter (iter_depth_first f) t.children ;
+  Lr44.option_may t.head (fun (s, _) -> f s)
+
+let rec iter_breadth_first f t =
+  Lr44.option_may t.head (fun (s, _) -> f s) ;
+  List.iter (iter_breadth_first f) t.children

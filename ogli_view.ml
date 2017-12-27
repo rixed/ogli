@@ -28,7 +28,7 @@ let clock =
     incr seq ;
     !seq
 
-let make_param name value =
+let param name value =
   { desc = { name ; last_changed = clock () } ; value }
 
 let param_set p v =
@@ -51,9 +51,15 @@ let fun_of p f =
     last_refresh = 0 } in
   Ogli_difftree.make head []
 
-let shape s =
+let shape s l =
   let head = Shape s in
-  Ogli_difftree.make head []
+  Ogli_difftree.make head l
+
+(* In painting order, aka from root to leaves: *)
+let rec iter_shapes f tree =
+  Ogli_difftree.iter_breadth_first (function
+    | Function _ -> () (* we assume the tree is up to date *)
+    | Shape s -> f s) tree
 
 (* Now a "window" must have essentially a difftree and a set of params: *)
 
@@ -61,24 +67,19 @@ type t =
   { mutable tree : shape_tree ;
     double_buffer : bool ;
     mutable past_tree : shape_tree option ; (* if double buffer *)
-    mutable last_render : int (* date after last render *) ;
     min_coord : V.t ;
     max_coord : V.t ;
     pixel_width : int ;
     pixel_height : int ;
-    (* There should be no such thing as a background color.
-     * The background is undefined, and if we want one we
-     * should start by displaying a rectangle over the window. *)
-    background_color : C.t ;
-    renderer : Ogli_shape.t list -> unit }
+    mutable frame_num : int }
 
 let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
          ?(pixel_width = 800) ?(pixel_height = 800)
-         ?(background_color = C.white) ?(double_buffer = false)
-         renderer tree =
+         ?(double_buffer = false)
+         tree =
   { tree ; double_buffer ; past_tree = None ;
     min_coord ; max_coord ; pixel_width ; pixel_height ;
-    last_render = 0 ; background_color ; renderer }
+    frame_num = 0 }
 
 (* Drawing commands to update the canvas: *)
 type cmd = Add of Ogli_shape.t | Del of Ogli_shape.t
@@ -87,29 +88,29 @@ let cmd_print fmt = function
   | Add s -> Format.fprintf fmt "Add %a" Ogli_shape.print s
   | Del s -> Format.fprintf fmt "Del %a" Ogli_shape.print s
 
-let deletion t s =
+let delete t s =
   let open Ogli_shape in
-  let sb = sbbox s in
-  let polys =
-    let res = K.one in (* unused *)
-    List.map (fun bb ->
-      Path.of_bbox bb |>
-      Algo.poly_of_path ~res) sb.bboxes in
-  { color = t.background_color ;
-    polys ; over = [] ; position = s.position }
-  (* TODO: also redraw everything but s, clipped by bb *)
+  (*Format.printf "delete bbox %a at pos %a\n%!"
+    Bbox.print s.bbox Point.print s.position ;*)
+  (* Render the whole tree (FIXME: not what we are going to redraw later,
+   * see later commands in cmds) in the shape bbox: *)
+  let bbox = Some (Bbox.translate s.bbox s.position) in
+  (* Note: by the time we are called, t.tree is the new tree *)
+  iter_shapes (fun s -> s.render s.position bbox) t.tree
 
 (* [cmds] is the reverted list of drawing commands to be executed in order
  * to move the canvas from what it is to what it should be. We should
  * optimise this and then compute the polys that actually needs to be
  * drawn.
- * A simpler approach is to just to eveything ; but the deletion is *very*
+ * A simpler approach is to just to everything ; but the deletion is *very*
  * expensive. *)
-let polys_of_cmds t cmds =
+let render_cmds t cmds =
+  (* TODO: optimize cmds here so that we merge what can be merged *)
   List.rev cmds |>
-  List.map (function
-    | Add s -> s
-    | Del s -> deletion t s)
+  List.iter (function
+    | Add s ->
+      s.render s.position None
+    | Del s -> delete t s)
 
 let add item cmd =
   match item with
@@ -123,8 +124,6 @@ let del item cmd =
   match item with
   | Function _ -> cmd
   | Shape s -> Del s :: cmd
-
-let diff = Ogli_difftree.diff del add
 
 let format_list pp fmt lst =
   Format.fprintf fmt "[" ;
@@ -142,18 +141,18 @@ let render t =
         Some (new_head, f ())
     | _ -> None) in
   (* Compute the drawing command required to update the canvas: *)
-  let cmds =
+  let prev_tree =
     if t.double_buffer then (
-      let last_but_one = t.past_tree in
+      let tree =
+        match t.past_tree with
+        | None -> Ogli_difftree.empty []
+        | Some tree -> tree in
       t.past_tree <- Some t.tree ;
-      match last_but_one with
-      | None -> []
-      | Some lb1 ->
-        diff lb1 next_tree []
+      if t.frame_num < 2 then Ogli_difftree.empty [] else tree
     ) else (
-      diff t.tree next_tree []
+      if t.frame_num < 1 then Ogli_difftree.empty [] else t.tree
     ) in
+  let cmds = Ogli_difftree.diff del add prev_tree next_tree [] in
   t.tree <- next_tree ;
-  t.last_render <- clock () ;
-  polys_of_cmds t cmds |>
-  t.renderer
+  render_cmds t cmds ;
+  t.frame_num <- t.frame_num + 1

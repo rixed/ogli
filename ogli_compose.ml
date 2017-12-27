@@ -2,7 +2,7 @@
  * (hopefully flat design is fashionable these days). For future proofing let's use a constructor
  * for the type of things we compose.
  *
- * For efficient diff we need to keep, at every stage of the AST, the old shape and the old sbbox
+ * For efficient diff we need to keep, at every stage of the AST, the old shape and the old bbox
  * down to individual polygons. And instead of a drawing function we have a diffing function
  * right from the start.
  *

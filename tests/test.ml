@@ -1,5 +1,10 @@
 open Ogli
 
+let shape_of_polys ~color polys position children =
+  let bbox = Algo.bbox polys
+  and render = Ogli_render.of_polys polys ~color in
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox }) children
+
 (* Starting from the full display function, which is what we'd like to write: *)
 let flower ~res ~height ~nb_leaves ~base =
   let green = c 0.1 0.9 0.15
@@ -44,33 +49,37 @@ let flower ~res ~height ~nb_leaves ~base =
     let bud =
       let radius = height *. 0.1 *. 0.5 in
       Path.circle ~center:(p 0. (stem_height)) radius |>
-      Algo.poly_of_path ~res in
+      Algo.poly_of_path ~res
+    in
     (* Final result: *)
-    [ Ogli_view.shape Ogli_shape.{ color = yellow ;
-        polys = [ bud ] ; position = base ;
-        over = [
-          { color = green ;
-            polys = stem :: leaves ; position = Point.origin ;
-            over = [] } ] } ])
+    [ shape_of_polys ~color:yellow [ bud ] base [] ;
+      shape_of_polys ~color:green (stem :: leaves) base [] ])
 
 let () =
   (* Window size will be width*height, with (0,0) on the bottom left corner
    * and visible triangles are counter-clockwise. *)
   let width = 800 and height = 600 in
-  let flower_height = Ogli_view.make_param "flower height" 10. in
-  let res = 0.1 in
-  let flower =
-    flower ~res ~height:flower_height ~nb_leaves:5 ~base:(p 205. 10.) in
-  let renderer =
-    Ogli_render.renderer width height in
+  (* This is the user's job to init since we could have plenty of views. *)
+  Ogli_render.init width height ;
+  (* Parameters: *)
+  let flower_height = Ogli_view.param "flower height" 10. in
+  (* Picture depending on those parameters: *)
+  let pic =
+    let background =
+      Path.rect (p 0. 0.) (p (K.of_int width) (K.of_int height)) |>
+      Algo.poly_of_path ~res:K.one (* unused *) in
+    shape_of_polys ~color:C.white [ background ] Point.origin [
+      flower ~res:0.1 ~height:flower_height
+             ~nb_leaves:5 ~base:(p 205. 10.) ] in
   let view =
     Ogli_view.make ~double_buffer:true
-                   ~pixel_width:width ~pixel_height:height renderer flower
+                   ~pixel_width:width ~pixel_height:height pic
   in
   let rec loop h =
     if h < 1000. then (
       Ogli_render.handle_next_event () ;
       Ogli_view.render view ;
+      Ogli_render.display () ;
       let h = h +. 2. in
       Ogli_view.param_set flower_height h ;
       loop h
