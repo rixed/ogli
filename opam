@@ -1,0 +1,14 @@
+opam-version: "1.2"
+version: "0.1"
+name: "ogli"
+maintainer: "Cedric Cellier <rixed@happyleptic.org>"
+build: [
+  [make]
+]
+install: [make "install"]
+remove: ["ocamlfind" "remove" "ogli"]
+depends: [
+  "ocamlfind" {build}
+  "geom"
+  "glop"
+]
