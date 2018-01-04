@@ -74,8 +74,8 @@ let () =
   (* This is the user's job to init since we could have plenty of views. *)
   Ogli_render.init width height ;
   (* Parameters: *)
-  let flower_height = Ogli_view.param "flower height" 10. in
-  let jiggling = Ogli_view.param "leaves jiggling phase" 0. in
+  let flower_height = Ogli_view.Param.make "flower height" 10. in
+  let jiggling = Ogli_view.Param.make "leaves jiggling phase" 0. in
   (* Picture depending on those parameters: *)
   let pic =
     let background =
@@ -97,8 +97,8 @@ let () =
     Ogli_view.render view ;
     Ogli_render.display () ;
     let h = h +. 2. in
-    Ogli_view.param_set flower_height h ;
-    Ogli_view.param_set jiggling (jiggling.value +. 0.1) ;
+    Ogli_view.Param.set flower_height h ;
+    Ogli_view.Param.set jiggling (jiggling.value +. 0.1) ;
     loop h
   in
-  loop flower_height.Ogli_view.value
+  loop flower_height.Ogli_view.Param.value

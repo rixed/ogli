@@ -12,28 +12,31 @@ open Ogli
  * new one, building a sequence of update operations (ie: nothing but a
  * sequence of polygons to draw), that we optimise and render.  *)
 
-(* The non polymorphic part of a parameter: *)
-type param_desc =
-  { name : string ; (* TODO: get rid of this *)
-    mutable last_changed : int }
-
-(* A parameter is essentially a named ref cell.
- * Functions keep a reference to a param_desc param, so you cannot
- * delete params dynamically. *)
-type 'a param = { desc : param_desc ; mutable value : 'a }
-
 let clock =
   let seq = ref 0 in
   fun () ->
     incr seq ;
     !seq
 
-let param name value =
-  { desc = { name ; last_changed = clock () } ; value }
+module Param =
+struct
+  (* The non polymorphic part of a parameter: *)
+  type desc =
+    { name : string ; (* TODO: get rid of this *)
+      mutable last_changed : int }
 
-let param_set p v =
-  p.desc.last_changed <- clock () ;
-  p.value <- v
+  (* A parameter is essentially a named ref cell.
+   * Functions keep a reference to a param_desc param, so you cannot
+   * delete params dynamically. *)
+  type 'a t = { desc : desc ; mutable value : 'a }
+
+  let make name value =
+    { desc = { name ; last_changed = clock () } ; value }
+
+  let set p v =
+    p.desc.last_changed <- clock () ;
+    p.value <- v
+end
 
 type shape_tree = item Ogli_difftree.t
 and item = Shape of Ogli_shape.t
@@ -41,13 +44,13 @@ and item = Shape of Ogli_shape.t
             (* We keep a reference to the param desc so we know when
              * the param is changed. *)
             param : Param.desc ;
-            f : (unit -> Constraint.t list * shape_tree list) ;
+            f : (unit -> shape_tree list) ;
             last_refresh : int }
 
 let fun_of p f =
   let head = Function {
-    param = p.desc ;
-    f = (fun () -> f p.value) ;
+    param = p.Param.desc ;
+    f = (fun () -> f p.Param.value) ;
     last_refresh = 0 } in
   Ogli_difftree.make head []
 
