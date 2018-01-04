@@ -46,6 +46,7 @@ and item = Shape of Ogli_shape.t
             param : Param.desc ;
             f : (unit -> shape_tree list) ;
             last_refresh : int }
+         | NoHead
 
 let fun_of p f =
   let head = Function {
@@ -58,10 +59,13 @@ let shape s l =
   let head = Shape s in
   Ogli_difftree.make head l
 
+let group l =
+  Ogli_difftree.make NoHead l
+
 (* In painting order, aka from root to leaves: *)
 let rec iter_shapes f tree =
   Ogli_difftree.iter_breadth_first (function
-    | Function _ -> () (* we assume the tree is up to date *)
+    | Function _ | NoHead -> () (* we assume the tree is up to date *)
     | Shape s -> f s) tree
 
 (* Now a "window" must have essentially a difftree and a set of params: *)
@@ -117,7 +121,7 @@ let render_cmds t cmds =
 
 let add item cmd =
   match item with
-  | Function _ -> cmd
+  | Function _ | NoHead -> cmd
   | Shape s -> Add s :: cmd
 
 let del item cmd =
@@ -125,7 +129,7 @@ let del item cmd =
    * the bounding box of this item. Therefore, we should also be given the
    * tree, or an iterator over its "continuation". *)
   match item with
-  | Function _ -> cmd
+  | Function _ | NoHead -> cmd
   | Shape s -> Del s :: cmd
 
 let format_list pp fmt lst =
