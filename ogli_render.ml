@@ -75,12 +75,15 @@ let of_text text size =
   of_polys polys,
   Algo.bbox polys
 
-let init ?(title="OGli") width height =
+let init ?(title="OGli") ?(y_down=false) width height =
   G.init ~depth:false ~alpha:true title width height ;
   at_exit (fun () -> G.exit ()) ;
   let proj =
     let z_near = K.neg K.one and z_far = K.one in
-    M.ortho 0. (K.of_int width) 0. (K.of_int height) z_near z_far in
+    if y_down then
+      M.ortho 0. (K.of_int width) (K.of_int height) 0. z_near z_far
+    else
+      M.ortho 0. (K.of_int width) 0. (K.of_int height) z_near z_far in
   G.set_projection proj ;
   G.set_viewport 0 0 width height ;
   set_pos Point.origin ;
