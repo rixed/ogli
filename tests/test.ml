@@ -79,10 +79,13 @@ let () =
   (* Picture depending on those parameters: *)
   let pic =
     let background =
-      Path.rect (p 0. 0.) (p (K.of_int width) (K.of_int height)) |>
+      Path.rect (p 0. 0.) (pi width height) |>
       Algo.poly_of_path ~res:K.one (* unused *) in
     shape_of_polys [ C.white, [ background ] ] Point.origin [
-      shape_of_text C.black 10. "Hello WORLD!" (p 300. 200.) [] ;
+      Ogli_view.fun_of jiggling (fun jiggling ->
+        let size = 10. +. cos (jiggling *. 0.13) in
+        let pos = p (300. +. cos jiggling) (200. +. sin jiggling) in
+        [ shape_of_text C.black size "Hello WORLD!" pos [] ]) ;
       flower ~res:0.1 ~height:flower_height ~jiggling
              ~nb_leaves:5 ~base:(p 205. 10.) ] in
   let view =

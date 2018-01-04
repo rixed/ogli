@@ -37,12 +37,12 @@ let param_set p v =
 
 type shape_tree = item Ogli_difftree.t
 and item = Shape of Ogli_shape.t
-          | Function of {
-              (* We keep a reference to the param desc so we know when
-               * the param is changed. *)
-              param : param_desc ;
-              f : (unit -> shape_tree list) ;
-              last_refresh : int }
+         | Function of {
+            (* We keep a reference to the param desc so we know when
+             * the param is changed. *)
+            param : Param.desc ;
+            f : (unit -> Constraint.t list * shape_tree list) ;
+            last_refresh : int }
 
 let fun_of p f =
   let head = Function {

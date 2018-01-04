@@ -64,7 +64,8 @@ let of_col_polys col_polys =
 
 let of_text text size =
   let word = Word.make text in
-  let font_height = 30. in (* TODO *)
+  (* font_height should be in pixels: *)
+  let font_height = Text_impl.face_info.Freetype.pixel_height in
   let scale = size /. font_height in
   let polys =
     Word.to_polys ~res:1. word |>

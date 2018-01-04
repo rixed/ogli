@@ -17,6 +17,7 @@ module Word = Text_impl.Word (Glyph)
 
 (* Some helper to soften the syntax of points, vectors, colors: *)
 let p (x : float) (y : float) = [| x ; y |]
+let pi x y = [| K.of_int x ; K.of_int y |]
 let v (x : float) (y : float) = [| x ; y |]
 let c (r : float) (g : float) (b : float) = [| r ; g ; b ; 1. |]
 let ca (r : float) (g : float) (b : float) (a : float) = [| r ; g ; b ; a |]
