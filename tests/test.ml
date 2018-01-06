@@ -92,13 +92,14 @@ let () =
     Ogli_view.make ~double_buffer:true
                    ~pixel_width:width ~pixel_height:height pic
   in
+  let quit = ref false in
   let rec loop h =
-    Ogli_render.handle_next_event () ;
+    Ogli_render.handle_next_event ~on_click:(fun _ _ -> quit := true) () ;
     Ogli_view.render view ;
     Ogli_render.display () ;
     let h = h +. 2. in
     Ogli_view.Param.set flower_height h ;
     Ogli_view.Param.set jiggling (jiggling.value +. 0.1) ;
-    loop h
+    if not !quit then loop h
   in
   loop flower_height.Ogli_view.Param.value

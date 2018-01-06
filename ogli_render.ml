@@ -91,7 +91,8 @@ let init ?(title="OGli") ?(y_down=false) width height =
 
 let display = G.swap_buffers
 
-(* TODO: callbacks for various events *)
-let handle_next_event () =
-  let ev = G.next_event false in
-  ignore ev
+let handle_next_event ?(on_click = fun _ _ -> ()) () =
+  match G.next_event false with
+  | Some (G.Clic (x, y, _, _)) -> on_click x y
+  | _ -> ()
+  (* TODO: resize *)
