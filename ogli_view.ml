@@ -133,10 +133,10 @@ let del item cmd =
   | Shape s -> Del s :: cmd
 
 let format_list pp fmt lst =
-  Format.fprintf fmt "[" ;
+  Format.fprintf fmt "@[[" ;
   List.iter (fun x ->
     Format.fprintf fmt "@[%a@]@," pp x) lst ;
-  Format.fprintf fmt "]"
+  Format.fprintf fmt "]@]"
 
 let render t =
   (* update the functions children whenever their param have changed: *)
