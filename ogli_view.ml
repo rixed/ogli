@@ -78,7 +78,7 @@ type t =
     max_coord : V.t ;
     pixel_width : int ;
     pixel_height : int ;
-    mutable frame_num : int }
+    mutable frame_num : int (* since last time our backbuffer was lost *) }
 
 let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
          ?(pixel_width = 800) ?(pixel_height = 800)
@@ -179,5 +179,9 @@ let next_event t get_event =
           | None -> ())
         | Function _ | NoHead -> ()
       ) t.tree
-    with Exit -> () in
-  get_event ~on_click
+    with Exit -> ()
+  and on_remap w h =
+    Format.printf "Remap event (w=%d, h=%d)\n%!" w h ;
+    t.frame_num <- 0
+  in
+  get_event ~on_click ~on_remap

@@ -70,9 +70,9 @@ let flower ~res ~height ~jiggling ~nb_leaves ~base =
 let () =
   (* Window size will be width*height, with (0,0) on the bottom left corner
    * and visible triangles are counter-clockwise. *)
-  let width = 800 and height = 600 in
+  let width = 800 and height = 600 and double_buffer = true in
   (* This is the user's job to init since we could have plenty of views. *)
-  Ogli_render.init width height ;
+  Ogli_render.init ~double_buffer width height ;
   (* Parameters: *)
   let flower_height = Ogli_view.Param.make "flower height" 10. in
   let jiggling = Ogli_view.Param.make "leaves jiggling phase" 0. in
@@ -92,7 +92,7 @@ let () =
       flower ~res:0.1 ~height:flower_height ~jiggling
              ~nb_leaves:5 ~base:(p 205. 10.) ] in
   let view =
-    Ogli_view.make ~double_buffer:true
+    Ogli_view.make ~double_buffer
                    ~pixel_width:width ~pixel_height:height pic
   in
   let rec loop h =
