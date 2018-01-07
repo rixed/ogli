@@ -1,14 +1,5 @@
 open Ogli
 
-let shape_of_polys ?on_click col_polys position children =
-  let render, bbox = Ogli_render.of_col_polys col_polys in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
-
-let shape_of_text ?on_click color size text position children =
-  let render, bbox = Ogli_render.of_text text size in
-  let render = render ~color in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
-
 (* Starting from the full display function, which is what we'd like to
  * write: *)
 let flower ~res ~height ~jiggling ~nb_leaves ~base =
@@ -30,7 +21,7 @@ let flower ~res ~height ~jiggling ~nb_leaves ~base =
       Algo.poly_of_path ~res
     in
     (* So let's do a first object with that: *)
-    [ shape_of_polys [ green, [ stem ] ; yellow, [ bud ] ] base [
+    [ Ogli_render.shape_of_polys [ green, [ stem ] ; yellow, [ bud ] ] base [
       (* Then the leaves, depends on nb_leaves (cst), height, and
        * jigging (another param): *)
       Ogli_view.fun_of jiggling (fun jiggling ->
@@ -64,7 +55,7 @@ let flower ~res ~height ~jiggling ~nb_leaves ~base =
           loop [] 0 in
         let leaves = list_init nb_leaves make_leaf
         in
-        [ shape_of_polys [ green, leaves ] base [] ])
+        [ Ogli_render.shape_of_polys [ green, leaves ] base [] ])
       ] ])
 
 let () =
@@ -84,11 +75,11 @@ let () =
     let background =
       Path.rect (p 0. 0.) (pi width height) |>
       Algo.poly_of_path ~res:K.one (* unused *) in
-    shape_of_polys ~on_click [ C.white, [ background ] ] Point.origin [
+    Ogli_render.shape_of_polys ~on_click [ C.white, [ background ] ] Point.origin [
       Ogli_view.fun_of jiggling (fun jiggling ->
         let size = 10. +. cos (jiggling *. 0.13) in
         let pos = p (300. +. cos jiggling) (200. +. sin jiggling) in
-        [ shape_of_text C.black size "Hello WORLD!" pos [] ]) ;
+        [ Ogli_render.shape_of_text C.black size "Hello WORLD!" pos [] ]) ;
       flower ~res:0.1 ~height:flower_height ~jiggling
              ~nb_leaves:5 ~base:(p 205. 10.) ] in
   let view =
