@@ -47,7 +47,7 @@ let of_polys polys =
       and y0 = int_of_float pmin.(1)
       and x1 = int_of_float (ceil pmax.(0))
       and y1 = int_of_float (ceil pmax.(1)) in
-      G.set_scissor x0 y0 (x1-x0) (y1-y0) ;
+      G.set_scissor x0 y0 (x1-x0+1) (y1-y0+1) ;
       do_render ()
     | Some Bbox.Empty -> ()
 
