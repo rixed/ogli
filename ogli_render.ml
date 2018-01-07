@@ -75,8 +75,8 @@ let of_text text size =
   of_polys polys,
   Algo.bbox polys
 
-let init ?(title="OGli") ?(y_down=false) width height =
-  G.init ~depth:false ~alpha:true title width height ;
+let init ?(title="OGli") ?(y_down=false) ?(double_buffer=false) width height =
+  G.init ~depth:false ~alpha:true ~double_buffer title width height ;
   at_exit (fun () -> G.exit ()) ;
   let proj =
     let z_near = K.neg K.one and z_far = K.one in
