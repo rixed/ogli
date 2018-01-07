@@ -13,5 +13,7 @@ type t =
     position : Point.t }
 
 let print fmt s =
-  Format.fprintf fmt "Shape(position=%a)"
-    Point.print s.position
+  Format.fprintf fmt "@[Shape(@[bbox=%a"
+    Bbox.print (Bbox.translate s.bbox s.position) ;
+  if s.on_click <> None then Format.fprintf fmt "@;on_click" ;
+  Format.fprintf fmt "@])@]"

@@ -1,4 +1,5 @@
 open Ogli
+open Lr44
 
 (* An Ogli_shape.t is a picture (an assemblage of colored polys).
  * Now we want to generate parameterized pictures, and then change the
@@ -160,12 +161,15 @@ let render t =
       if t.frame_num < 1 then Ogli_difftree.empty [] else t.tree
     ) in
   let cmds = Ogli_difftree.diff del add prev_tree next_tree [] in
+  Format.printf "Commands for frame %d: %a\n%!"
+    t.frame_num (list_print cmd_print) cmds ;
   t.tree <- next_tree ;
   render_cmds t cmds ;
   t.frame_num <- t.frame_num + 1
 
 let next_event t get_event =
   let on_click click_pos =
+    Format.printf "click!\n%!" ;
     try
       Ogli_difftree.iter_depth_first (function
         | Shape s ->
@@ -173,6 +177,7 @@ let next_event t get_event =
           | Some f ->
               let bbox = Bbox.translate s.bbox s.position in
               if Bbox.is_inside bbox click_pos then (
+                Format.printf "click on bbox %a\n%!" Bbox.print bbox ;
                 f () ;
                 raise Exit
               )
