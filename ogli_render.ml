@@ -91,8 +91,12 @@ let init ?(title="OGli") ?(y_down=false) ?(double_buffer=false) width height =
 
 let display = G.swap_buffers
 
-let handle_next_event ?(on_click = fun _ _ -> ()) () =
-  match G.next_event false with
-  | Some (G.Clic (x, y, _, _)) -> on_click x y
+let next_event ~wait ~on_click =
+  match G.next_event wait with
+  | Some (G.Clic (x, y, w, h)) ->
+      (* We are given the X11 coordinates but we expect viewport coordinates: *)
+      let m = G.get_projection () in
+      let click_pos = G.unproject (0, 0, w, h) m x (h - y) in
+      on_click click_pos
   | _ -> ()
   (* TODO: resize *)

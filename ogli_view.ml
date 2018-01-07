@@ -163,3 +163,21 @@ let render t =
   t.tree <- next_tree ;
   render_cmds t cmds ;
   t.frame_num <- t.frame_num + 1
+
+let next_event t get_event =
+  let on_click click_pos =
+    try
+      Ogli_difftree.iter_depth_first (function
+        | Shape s ->
+          (match s.Ogli_shape.on_click with
+          | Some f ->
+              let bbox = Bbox.translate s.bbox s.position in
+              if Bbox.is_inside bbox click_pos then (
+                f () ;
+                raise Exit
+              )
+          | None -> ())
+        | Function _ | NoHead -> ()
+      ) t.tree
+    with Exit -> () in
+  get_event ~on_click

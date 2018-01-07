@@ -1,13 +1,13 @@
 open Ogli
 
-let shape_of_polys col_polys position children =
+let shape_of_polys ?on_click col_polys position children =
   let render, bbox = Ogli_render.of_col_polys col_polys in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox }) children
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
 
-let shape_of_text color size text position children =
+let shape_of_text ?on_click color size text position children =
   let render, bbox = Ogli_render.of_text text size in
   let render = render ~color in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox }) children
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
 
 (* Starting from the full display function, which is what we'd like to
  * write: *)
@@ -76,12 +76,15 @@ let () =
   (* Parameters: *)
   let flower_height = Ogli_view.Param.make "flower height" 10. in
   let jiggling = Ogli_view.Param.make "leaves jiggling phase" 0. in
+  (* Event handler: *)
+  let quit = ref false in
+  let on_click () = quit := true in
   (* Picture depending on those parameters: *)
   let pic =
     let background =
       Path.rect (p 0. 0.) (pi width height) |>
       Algo.poly_of_path ~res:K.one (* unused *) in
-    shape_of_polys [ C.white, [ background ] ] Point.origin [
+    shape_of_polys ~on_click [ C.white, [ background ] ] Point.origin [
       Ogli_view.fun_of jiggling (fun jiggling ->
         let size = 10. +. cos (jiggling *. 0.13) in
         let pos = p (300. +. cos jiggling) (200. +. sin jiggling) in
@@ -92,10 +95,9 @@ let () =
     Ogli_view.make ~double_buffer:true
                    ~pixel_width:width ~pixel_height:height pic
   in
-  let quit = ref false in
   let rec loop h =
-    Ogli_render.handle_next_event ~on_click:(fun _ _ -> quit := true) () ;
     Ogli_view.render view ;
+    Ogli_view.next_event view (Ogli_render.next_event ~wait:false) ;
     Ogli_render.display () ;
     let h = h +. 2. in
     Ogli_view.Param.set flower_height h ;
