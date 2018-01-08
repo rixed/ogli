@@ -84,19 +84,7 @@ let shape_of_text ?on_click color size text position children =
   let render = render ~color in
   Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
 
-let init ?(title="OGli") ?(y_down=false) ?(double_buffer=false) width height =
-  G.init ~depth:false ~alpha:true ~double_buffer title width height ;
-  at_exit (fun () -> G.exit ()) ;
-  let proj =
-    let z_near = K.neg K.one and z_far = K.one in
-    if y_down then
-      M.ortho 0. (K.of_int width) (K.of_int height) 0. z_near z_far
-    else
-      M.ortho 0. (K.of_int width) 0. (K.of_int height) z_near z_far in
-  G.set_projection proj ;
-  G.set_viewport 0 0 width height ;
-  set_pos Point.origin ;
-  G.clear ~color:C.black ()
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover }) children
 
 let display = G.swap_buffers
 
@@ -109,3 +97,21 @@ let rec next_event ~wait ~on_click ~on_remap =
       on_click click_pos
   | Some (G.Resize (w, h)) -> on_remap w h
   | _ -> if wait then next_event ~wait ~on_click ~on_remap
+
+let resize ?(y_down=false) width height =
+  let proj =
+    let z_near = K.neg K.one and z_far = K.one in
+    if y_down then
+      M.ortho 0. (K.of_int width) (K.of_int height) 0. z_near z_far
+    else
+      M.ortho 0. (K.of_int width) 0. (K.of_int height) z_near z_far in
+  G.set_projection proj ;
+  G.set_viewport 0 0 width height
+
+let init ?(title="OGli") ?y_down ?(double_buffer=false)
+         width height =
+  G.init ~depth:false ~alpha:true ~double_buffer title width height ;
+  at_exit (fun () -> G.exit ()) ;
+  resize ?y_down width height ;
+  set_pos Point.origin ;
+  G.clear ~color:C.black ()

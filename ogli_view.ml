@@ -77,16 +77,16 @@ type t =
     mutable past_tree : shape_tree option ; (* if double buffer *)
     min_coord : V.t ;
     max_coord : V.t ;
-    pixel_width : int ;
-    pixel_height : int ;
+    width : int Param.t ;
+    height : int Param.t ;
     mutable frame_num : int (* since last time our backbuffer was lost *) }
 
 let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
-         ?(pixel_width = 800) ?(pixel_height = 800)
+         ~width ~height
          ?(double_buffer = false)
          tree =
   { tree ; double_buffer ; past_tree = None ;
-    min_coord ; max_coord ; pixel_width ; pixel_height ;
+    min_coord ; max_coord ; width ; height ;
     frame_num = 0 }
 
 (* Drawing commands to update the canvas: *)
@@ -167,7 +167,7 @@ let render t =
   render_cmds t cmds ;
   t.frame_num <- t.frame_num + 1
 
-let next_event t get_event =
+let next_event t get_event on_resize =
   let on_click click_pos =
     Format.printf "click!\n%!" ;
     try
@@ -187,6 +187,9 @@ let next_event t get_event =
     with Exit -> ()
   and on_remap w h =
     Format.printf "Remap event (w=%d, h=%d)\n%!" w h ;
-    t.frame_num <- 0
+    t.frame_num <- 0 ; (* All back-buffers are lost *)
+    Param.set t.width w ;
+    Param.set t.height h ;
+    on_resize w h
   in
   get_event ~on_click ~on_remap
