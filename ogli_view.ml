@@ -31,14 +31,23 @@ struct
   (* A parameter is essentially a named ref cell.
    * Functions keep a reference to a param_desc param, so you cannot
    * delete params dynamically. *)
-  type 'a t = { desc : desc ; mutable value : 'a }
+  type 'a t =
+    { desc : desc ; mutable value : 'a ;
+      on_update : ('a -> unit) option }
 
-  let make name value =
-    { desc = { name ; last_changed = clock () } ; value }
+  let make ?on_update name value =
+    { desc = { name ; last_changed = clock () } ; value ; on_update }
 
   let set p v =
     p.desc.last_changed <- clock () ;
-    p.value <- v
+    p.value <- v ;
+    option_may p.on_update (fun f -> f v)
+
+  (* For list params: *)
+  let cons p v = set p (v :: p.value)
+
+  (* For bool params: *)
+  let togle p = set p (not p.value)
 end
 
 type shape_tree = item Ogli_difftree.t
