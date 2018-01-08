@@ -75,15 +75,13 @@ let of_text text size =
   of_polys polys,
   Algo.bbox polys
 
-let shape_of_polys ?on_click col_polys position children =
+let shape_of_polys ?on_click ?on_hover ?on_unhover col_polys position children =
   let render, bbox = of_col_polys col_polys in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover }) children
 
-let shape_of_text ?on_click color size text position children =
+let shape_of_text ?on_click ?on_hover ?on_unhover color size text position children =
   let render, bbox = of_text text size in
   let render = render ~color in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click }) children
-
   Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover }) children
 
 let display = G.swap_buffers
