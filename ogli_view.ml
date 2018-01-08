@@ -1,6 +1,8 @@
 open Ogli
 open Lr44
 
+let debug = true
+
 (* An Ogli_shape.t is a picture (an assemblage of colored polys).
  * Now we want to generate parameterized pictures, and then change the
  * parameters and have a function that updates the picture when it needs to
@@ -98,8 +100,8 @@ let cmd_print fmt = function
 
 let delete t s =
   let open Ogli_shape in
-  (*Format.printf "delete bbox %a at pos %a\n%!"
-    Bbox.print s.bbox Point.print s.position ;*)
+  if debug then Format.printf "delete bbox %a at pos %a\n%!"
+    Bbox.print s.bbox Point.print s.position ;
   (* Render the whole tree (FIXME: not what we are going to redraw later,
    * see later commands in cmds) in the shape bbox: *)
   let bbox = Some (Bbox.translate s.bbox s.position) in
@@ -126,18 +128,9 @@ let add item cmd =
   | Shape s -> Add s :: cmd
 
 let del item cmd =
-  (* No. We should redraw everything but this part of the tree, clipped by
-   * the bounding box of this item. Therefore, we should also be given the
-   * tree, or an iterator over its "continuation". *)
   match item with
   | Function _ | NoHead -> cmd
   | Shape s -> Del s :: cmd
-
-let format_list pp fmt lst =
-  Format.fprintf fmt "@[[" ;
-  List.iter (fun x ->
-    Format.fprintf fmt "@[%a@]@," pp x) lst ;
-  Format.fprintf fmt "]@]"
 
 let render t =
   (* update the functions children whenever their param have changed: *)
@@ -161,7 +154,7 @@ let render t =
       if t.frame_num < 1 then Ogli_difftree.empty [] else t.tree
     ) in
   let cmds = Ogli_difftree.diff del add prev_tree next_tree [] in
-  Format.printf "Commands for frame %d: %a\n%!"
+  if debug then Format.printf "Commands for frame %d: %a\n%!"
     t.frame_num (list_print cmd_print) cmds ;
   t.tree <- next_tree ;
   render_cmds t cmds ;
@@ -169,7 +162,7 @@ let render t =
 
 let next_event t get_event on_resize =
   let on_click click_pos =
-    Format.printf "click!\n%!" ;
+    if debug then Format.printf "click!\n%!" ;
     try
       Ogli_difftree.iter_depth_first (function
         | Shape s ->
