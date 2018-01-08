@@ -37,14 +37,17 @@ ogli.cma: $(OGLILIB_SOURCES:.ml=.cmo)
 tests/test.opt: tests/test.cmx ogli.cmxa
 	$(OCAMLOPT) -package "$(PACKAGES) unix" -I "." ogli.cmxa -linkpkg $(OCAMLOPTFLAGS) $< -o $@
 
+tests/test.byte: tests/test.cmo ogli.cma
+	$(OCAMLC) -package "$(PACKAGES)" -I "." ogli.cma -linkpkg $(OCAMLFLAGS) $< -o $@
+
 all_tests.opt: $(LINKED_FOR_TESTS:.ml=.cmx) all_tests.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -linkpkg -package batteries,qcheck $(filter %.cmx, $^) $(filter %.ml, $^) -o $@
 
 clean-spec:
-	$(RM) tests/test.cmx tests/test.opt tests/*.a tests/*.cmx tests/*.cmo tests/*.cmi tests/*.annot tests/*.o
+	$(RM) tests/test.cmx tests/test.{opt,byte} tests/*.a tests/*.cmx tests/*.cmo tests/*.cmi tests/*.annot tests/*.o
 
 distclean-spec:
-	$(RM) tests/test.opt
+	$(RM) tests/test.{opt,byte}
 
 check-spec:
 #	tests/test.opt
