@@ -161,17 +161,18 @@ let render t =
   t.frame_num <- t.frame_num + 1
 
 let next_event t get_event on_resize =
-  let on_click click_pos =
-    if debug then Format.printf "click!\n%!" ;
+  let on_event event pos =
+    if debug then Format.printf "Event %a at %a!\n%!"
+      print_event event Point.print pos ;
     try
       Ogli_difftree.iter_depth_first (function
         | Shape s ->
-          (match s.Ogli_shape.on_click with
+          (match Ogli_shape.handler_for_event s event with
           | Some f ->
               let bbox = Bbox.translate s.bbox s.position in
-              if Bbox.is_inside bbox click_pos then (
+              if Bbox.is_inside bbox pos then (
                 Format.printf "click on bbox %a\n%!" Bbox.print bbox ;
-                f () ;
+                f pos ;
                 raise Exit
               )
           | None -> ())
@@ -185,4 +186,4 @@ let next_event t get_event on_resize =
     Param.set t.height h ;
     on_resize w h
   in
-  get_event ~on_click ~on_remap
+  get_event ~on_event ~on_remap

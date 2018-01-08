@@ -5,8 +5,8 @@ open Ogli_view
 let screen_width = Param.make "screen width" 800
 let screen_height = Param.make "screen height" 600
 let nb_leaves = Param.make "nb leaves" 5
-let grow_leaf () = Param.set nb_leaves (nb_leaves.value + 1)
-let pick_leaf () =
+let grow_leaf _ = Param.set nb_leaves (nb_leaves.value + 1)
+let pick_leaf _ =
   if nb_leaves.value > 0 then
     Param.set nb_leaves (nb_leaves.value - 1)
 
@@ -78,7 +78,7 @@ let () =
   let jiggling = Param.make "leaves jiggling phase" 0. in
   (* Event handler: *)
   let quit = ref false in
-  let on_click () = quit := true in
+  let on_click _ = quit := true in
   (* Picture depending on those parameters: *)
   let pic =
     fun_of screen_width (fun screen_w ->

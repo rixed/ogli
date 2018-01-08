@@ -75,26 +75,66 @@ let of_text text size =
   of_polys polys,
   Algo.bbox polys
 
-let shape_of_polys ?on_click ?on_hover ?on_unhover col_polys position children =
+let shape_of_polys ?on_click ?on_hover ?on_unhover ?on_drag_start ?on_drag_stop ?on_drag col_polys position children =
   let render, bbox = of_col_polys col_polys in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover }) children
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover ; on_drag_start ; on_drag ; on_drag_stop }) children
 
-let shape_of_text ?on_click ?on_hover ?on_unhover color size text position children =
+let shape_of_text ?on_click ?on_hover ?on_unhover ?on_drag_start ?on_drag_stop ?on_drag color size text position children =
   let render, bbox = of_text text size in
   let render = render ~color in
-  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover }) children
+  Ogli_view.shape (Ogli_shape.{ position ; render ; bbox ; on_click ; on_hover ; on_unhover ; on_drag_start ; on_drag ; on_drag_stop }) children
 
 let display = G.swap_buffers
 
-let rec next_event ~wait ~on_click ~on_remap =
-  match G.next_event wait with
-  | Some (G.Clic (x, y, w, h)) ->
-      (* We are given the X11 coordinates but we expect viewport coordinates: *)
-      let m = G.get_projection () in
-      let click_pos = G.unproject (0, 0, w, h) m x (h - y) in
-      on_click click_pos
-  | Some (G.Resize (w, h)) -> on_remap w h
-  | _ -> if wait then next_event ~wait ~on_click ~on_remap
+let rec next_event =
+  let drag_start = ref None
+  and drag_signaled = ref false
+  and click_pos x y w h =
+    (* We are given the X11 coordinates but we expect viewport coordinates: *)
+    let m = G.get_projection () in
+    G.unproject (0, 0, w, h) m x (h - y)
+  and min_drag_dist = 10. (* how many pixels we have to drag for a drag to be considered *)
+  in
+  fun ~wait ~on_event ~on_remap ->
+    match G.next_event wait with
+    | Some (G.Clic (x, y, w, h)) ->
+        let pos = click_pos x y w h in
+        (match !drag_start with
+        | None ->
+            assert (not !drag_signaled) ;
+            drag_start := Some pos
+        (* User managed do get a click through while dragging, using another button.
+         * So that's a click event. *)
+        | Some _ -> on_event Click pos)
+    | Some (G.UnClic (x, y, w, h)) ->
+        let stop = click_pos x y w h in
+        (match !drag_start with
+        (* This should not happen, let's ignore that unclick: *)
+        | None -> ()
+        | Some start ->
+            if !drag_signaled then (
+              on_event DragStop stop ;
+              drag_signaled := false ;
+            ) else (
+              (* Just a click *)
+              on_event Click start
+            ) ;
+            drag_start := None)
+    | Some (G.Move (x, y, w, h)) ->
+        let pos = click_pos x y w h in
+        (match !drag_start with
+        | None -> () (* TODO: hovering *)
+        | Some start ->
+            if !drag_signaled then
+              on_event Drag pos
+            else
+              if Point.distance pos start > min_drag_dist then (
+                on_event DragStart start ;
+                on_event Drag pos ;
+                drag_signaled := true
+              ))
+    | Some (G.Resize (w, h)) -> on_remap w h
+    | _ -> if wait then next_event ~wait ~on_event ~on_remap
 
 let resize ?(y_down=false) width height =
   let proj =
