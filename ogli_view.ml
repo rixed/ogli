@@ -1,7 +1,7 @@
 open Ogli
 open Lr44
 
-let debug = true
+let debug = false
 
 (* An Ogli_shape.t is a picture (an assemblage of colored polys).
  * Now we want to generate parameterized pictures, and then change the
@@ -189,7 +189,7 @@ let next_event t get_event on_resize =
       ) t.tree
     with Exit -> ()
   and on_remap w h =
-    Format.printf "Remap event (w=%d, h=%d)\n%!" w h ;
+    if debug then Format.printf "Remap event (w=%d, h=%d)\n%!" w h ;
     t.frame_num <- 0 ; (* All back-buffers are lost *)
     Param.set t.width w ;
     Param.set t.height h ;
