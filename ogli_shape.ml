@@ -17,6 +17,13 @@ type t =
      * This position is relative to the parent though. *)
     position : Point.t }
 
+let make ?on_click ?on_hover ?on_unhover
+         ?on_drag_start ?on_drag ?on_drag_stop
+         ?(position = Point.origin)
+         render bbox =
+  { render ; bbox ; on_click ; on_hover ; on_unhover ;
+    on_drag_start ; on_drag ; on_drag_stop ; position }
+
 let handler_for_event s = function
   | Click -> s.on_click
   | DragStart -> s.on_drag_start
