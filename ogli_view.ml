@@ -38,8 +38,11 @@ struct
   let make ?on_update name value =
     { desc = { name ; last_changed = clock () } ; value ; on_update }
 
+  let change p =
+    p.desc.last_changed <- clock ()
+
   let set p v =
-    p.desc.last_changed <- clock () ;
+    change p ;
     p.value <- v ;
     option_may p.on_update (fun f -> f v)
 
@@ -48,6 +51,10 @@ struct
 
   (* For bool params: *)
   let togle p = set p (not p.value)
+
+  (* For int params: *)
+  let incr p = set p (p.value + 1)
+  let decr p = set p (p.value - 1)
 end
 
 type shape_tree = item Ogli_difftree.t
