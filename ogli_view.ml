@@ -150,13 +150,15 @@ let del item cmd =
 
 let render t =
   (* update the functions children whenever their param have changed: *)
-  let next_tree = Ogli_difftree.map t.tree (function
+  let next_tree = Ogli_difftree.map (function
     | Function { param ; f ; last_refresh }, key
       when last_refresh < param.last_changed ->
+        if debug then Format.printf "Param %s has changed (%d) since last refresh (%d)@."
+          param.name param.last_changed last_refresh ;
         let new_head =
           Some (Function { param ; f ; last_refresh = clock () }, key) in
         Some (new_head, f ())
-    | _ -> None) in
+    | _ -> None) t.tree in
   (* Compute the drawing command required to update the canvas: *)
   let prev_tree =
     if t.double_buffer then (

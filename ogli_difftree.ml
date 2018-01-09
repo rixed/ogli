@@ -169,7 +169,7 @@ and diff del add bef aft ctx =
 
 (* Useful to update the tree: a function that crawl the tree (depth first)
  * and builds a new one, persisting what can be: *)
-let rec map t f =
+let rec map f t =
   let head, children =
     match t.head with
     | None -> t.head, t.children
@@ -178,8 +178,7 @@ let rec map t f =
         | None -> t.head, t.children
         | Some x -> x) in
   { head ;
-    children = List.map (fun child ->
-        map child f) children }
+    children = List.map (map f) children }
 
 let rec iter_depth_first f t =
   List.iter (iter_depth_first f) t.children ;
