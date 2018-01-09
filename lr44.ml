@@ -11,3 +11,7 @@ let list_print printer fmt lst =
   List.iter (fun i ->
     Format.fprintf fmt "%a@;" printer i) lst ;
   Format.fprintf fmt "]@]"
+
+let pos_mod a b =
+  let x = a mod b in
+  if x >= 0 then x else x + b
