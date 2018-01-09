@@ -151,6 +151,7 @@ let del item cmd =
   | Function _ | NoHead -> cmd
   | Shape s -> Del s :: cmd
 
+(* Last children of a tree node get painted last (painter algorithm) *)
 let render t =
   (* update the functions children whenever their param have changed: *)
   let next_tree = Ogli_difftree.map (function
@@ -181,6 +182,7 @@ let render t =
   render_cmds t cmds ;
   t.frame_num <- t.frame_num + 1
 
+(* Last children of a tree node receive the event (painter algorithm) *)
 let next_event t get_event on_resize =
   let on_event event pos =
     if debug then Format.printf "Event %a at %a!@."
@@ -189,14 +191,14 @@ let next_event t get_event on_resize =
       (* Like iter_depth_first, but with some additional exception
        * handlers for on_sub_click callbacks: *)
       let rec look_for_handler tree =
-        List.iter loop tree.Ogli_difftree.children ;
+        List.iter loop (List.rev tree.Ogli_difftree.children) ;
         Lr44.option_may tree.head (function
           | (Shape s, _) ->
               let handler = Ogli_shape.handler_for_event s event in
               Lr44.option_may handler (fun f ->
                 let bbox = Bbox.translate s.bbox s.position in
                 if Bbox.is_inside bbox pos then (
-                if debug then Format.printf "click on bbox %a@." Bbox.print bbox ;
+                if debug then Format.printf "... Event is for bbox %a@." Bbox.print bbox ;
                 f pos ;
                 raise Exit))
           | _ -> ())
