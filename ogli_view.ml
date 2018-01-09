@@ -33,9 +33,14 @@ struct
    * delete params dynamically. *)
   type 'a t =
     { desc : desc ; mutable value : 'a ;
-      on_update : ('a -> unit) option }
+      mutable on_update : (unit -> unit) list }
 
   let make ?on_update name value =
+    let on_update =
+      match on_update with
+      | None -> []
+      | Some f -> [ f ]
+    in
     { desc = { name ; last_changed = clock () } ; value ; on_update }
 
   let change p =
@@ -44,7 +49,11 @@ struct
   let set p v =
     change p ;
     p.value <- v ;
-    option_may p.on_update (fun f -> f v)
+    List.iter (fun f -> f ()) p.on_update
+
+  let on_update p f =
+    assert (List.for_all (fun f' -> f != f') p.on_update) ;
+    p.on_update <- f :: p.on_update
 
   (* For list params: *)
   let cons p v = set p (v :: p.value)
