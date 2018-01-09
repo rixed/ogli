@@ -59,7 +59,7 @@ struct
   let cons p v = set p (v :: p.value)
 
   (* For bool params: *)
-  let togle p = set p (not p.value)
+  let toggle p = set p (not p.value)
 
   (* For int params: *)
   let incr p = set p (p.value + 1)
