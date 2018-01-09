@@ -55,6 +55,9 @@ struct
   (* For int params: *)
   let incr p = set p (p.value + 1)
   let decr p = set p (p.value - 1)
+
+  (* For optional params: *)
+  let none p = option_may p.value (fun _ -> set p None)
 end
 
 type shape_tree = item Ogli_difftree.t
