@@ -22,7 +22,7 @@ let of_polys polys =
     List.fold_left (fun (l, ps as prev) p ->
       let len = Poly.length p in
       if len <> 3 then (
-        Format.eprintf "Not a triangle: %a\n%!" Poly.print p ;
+        Format.eprintf "Not a triangle: %a@." Poly.print p ;
         prev
       ) else (
         l + len, p :: ps

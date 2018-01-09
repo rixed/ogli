@@ -116,7 +116,7 @@ let cmd_print fmt = function
 
 let delete t s =
   let open Ogli_shape in
-  if debug then Format.printf "delete bbox %a at pos %a\n%!"
+  if debug then Format.printf "delete bbox %a at pos %a@."
     Bbox.print s.bbox Point.print s.position ;
   (* Render the whole tree (FIXME: not what we are going to redraw later,
    * see later commands in cmds) in the shape bbox: *)
@@ -170,7 +170,7 @@ let render t =
       if t.frame_num < 1 then Ogli_difftree.empty [] else t.tree
     ) in
   let cmds = Ogli_difftree.diff del add prev_tree next_tree [] in
-  if debug then Format.printf "Commands for frame %d: %a\n%!"
+  if debug then Format.printf "Commands for frame %d: %a@."
     t.frame_num (list_print cmd_print) cmds ;
   t.tree <- next_tree ;
   render_cmds t cmds ;
@@ -178,7 +178,7 @@ let render t =
 
 let next_event t get_event on_resize =
   let on_event event pos =
-    if debug then Format.printf "Event %a at %a!\n%!"
+    if debug then Format.printf "Event %a at %a!@."
       print_event event Point.print pos ;
     try
       (* Like iter_depth_first, but with some additional exception
@@ -208,7 +208,7 @@ let next_event t get_event on_resize =
       loop t.tree
     with Exit -> ()
   and on_remap w h =
-    if debug then Format.printf "Remap event (w=%d, h=%d)\n%!" w h ;
+    if debug then Format.printf "Remap event (w=%d, h=%d)@." w h ;
     t.frame_num <- 0 ; (* All back-buffers are lost *)
     Param.set t.width w ;
     Param.set t.height h ;
