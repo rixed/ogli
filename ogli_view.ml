@@ -174,19 +174,31 @@ let next_event t get_event on_resize =
     if debug then Format.printf "Event %a at %a!\n%!"
       print_event event Point.print pos ;
     try
-      Ogli_difftree.iter_depth_first (function
-        | Shape s ->
-          (match Ogli_shape.handler_for_event s event with
-          | Some f ->
-              let bbox = Bbox.translate s.bbox s.position in
-              if Bbox.is_inside bbox pos then (
-                Format.printf "click on bbox %a\n%!" Bbox.print bbox ;
+      (* Like iter_depth_first, but with some additional exception
+       * handlers for on_sub_click callbacks: *)
+      let rec look_for_handler tree =
+        List.iter loop tree.Ogli_difftree.children ;
+        Lr44.option_may tree.head (function
+          | (Shape s, _) ->
+              let handler = Ogli_shape.handler_for_event s event in
+              Lr44.option_may handler (fun f ->
+                let bbox = Bbox.translate s.bbox s.position in
+                if Bbox.is_inside bbox pos then (
+                if debug then Format.printf "click on bbox %a@." Bbox.print bbox ;
                 f pos ;
-                raise Exit
-              )
-          | None -> ())
-        | Function _ | NoHead -> ()
-      ) t.tree
+                raise Exit))
+          | _ -> ())
+      and loop tree =
+        match tree.head with
+        | Some (Shape s, _) when event = Click && s.on_sub_click <> None ->
+            (try look_for_handler tree
+            with Exit -> (* click was handled *)
+                Lr44.option_may s.on_sub_click (fun f -> f pos) ;
+                raise Exit)
+        | _ -> (* just recurse then *)
+            look_for_handler tree
+      in
+      loop t.tree
     with Exit -> ()
   and on_remap w h =
     if debug then Format.printf "Remap event (w=%d, h=%d)\n%!" w h ;
