@@ -62,14 +62,23 @@ let of_col_polys col_polys =
     List.iter (fun r -> r pos bbox) renderers in
   render, bbox
 
-let of_text text size =
+let of_text ?(move_to_lower_left=false) text size =
   let word = Word.make text in
   (* font_height should be in pixels: *)
   let font_height = Text_impl.face_info.Freetype.pixel_height in
   let scale = size /. font_height in
+  let move_to_ll =
+    if move_to_lower_left then
+      Word.lower_left_to_origin word
+    else Point.origin in
   let polys =
+    (* We must convert to polys in the glyph space regardless of scale
+     * or the bezier curves might be wrong. After the scale we should
+     * lower the vertex resolution though. *)
     Word.to_polys ~res:1. word |>
-    List.map (fun (pos, polys) -> Algo.translate_poly pos polys) |>
+    List.map (fun (pos, polys) ->
+      Point.addi pos move_to_ll ;
+      Algo.translate_poly pos polys) |>
     List.concat |>
     Algo.scale_poly scale in
   of_polys polys,
