@@ -84,14 +84,16 @@ let of_text ?(move_to_lower_left=false) text size =
   of_polys polys,
   Algo.bbox polys
 
-let shape_of_polys ?on_click ?on_sub_click ?on_hover ?on_unhover ?on_drag_start ?on_drag_stop ?on_drag col_polys position children =
+let shape_of_polys ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag col_polys position children =
   let render, bbox = of_col_polys col_polys in
-  Ogli_view.shape (Ogli_shape.make ~position ?on_click ?on_sub_click ?on_hover ?on_unhover ?on_drag_start ?on_drag_stop ?on_drag render bbox) children
+  Ogli_view.shape (Ogli_shape.make ~position ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag render bbox) children
 
-let shape_of_text ?on_click ?on_sub_click ?on_hover ?on_unhover ?on_drag_start ?on_drag_stop ?on_drag color size text position children =
-  let render, bbox = of_text text size in
+(* Here position is the position of the beginning of the baseline (the origin of the glyph, where the pen starts).
+ * Set move_to_lower_left if the position you pass is actually the lower left corner of where you want that text to be. *)
+let shape_of_text ?move_to_lower_left ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag color size text position children =
+  let render, bbox = of_text ?move_to_lower_left text size in
   let render = render ~color in
-  Ogli_view.shape (Ogli_shape.make ~position ?on_click ?on_sub_click ?on_hover ?on_unhover ?on_drag_start ?on_drag_stop ?on_drag render bbox) children
+  Ogli_view.shape (Ogli_shape.make ~position ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag render bbox) children
 
 let display = G.swap_buffers
 
@@ -132,7 +134,8 @@ let rec next_event =
     | Some (G.Move (x, y, w, h)) ->
         let pos = click_pos x y w h in
         (match !drag_start with
-        | None -> () (* TODO: hovering *)
+        | None ->
+            on_event Hover pos
         | Some start ->
             if !drag_signaled then
               on_event Drag pos

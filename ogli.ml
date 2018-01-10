@@ -22,15 +22,14 @@ let v (x : float) (y : float) : V.t = [| x ; y |]
 let c (r : float) (g : float) (b : float) : C.t = [| r ; g ; b ; 1. |]
 let ca (r : float) (g : float) (b : float) (a : float) : C.t = [| r ; g ; b ; a |]
 
-type event = Click | DragStart | Drag | DragStop | HoverStart | HoverStop
+type event = Click | DragStart | Drag | DragStop | Hover
 
 let string_of_event = function
   | Click -> "Click"
   | DragStart -> "DragStart"
   | Drag -> "Drag"
   | DragStop -> "DragStop"
-  | HoverStart -> "HoverStart"
-  | HoverStop -> "HoverStop"
+  | Hover -> "Hover"
 
 let print_event fmt event =
   Format.fprintf fmt "%s" (string_of_event event)

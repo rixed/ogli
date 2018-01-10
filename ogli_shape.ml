@@ -10,7 +10,6 @@ type t =
      * When set, on_click is called only for clicks falling on this shape. *)
     on_sub_click : (Point.t -> unit) option ;
     on_hover : (Point.t -> unit) option ;
-    on_unhover : (Point.t -> unit) option ;
     on_drag_start : (Point.t -> unit) option ;
     on_drag : (Point.t -> unit) option ;
     on_drag_stop : (Point.t -> unit) option ;
@@ -20,11 +19,11 @@ type t =
      * This position is relative to the parent though. *)
     position : Point.t }
 
-let make ?on_click ?on_sub_click ?on_hover ?on_unhover
+let make ?on_click ?on_sub_click ?on_hover
          ?on_drag_start ?on_drag ?on_drag_stop
          ?(position = Point.origin)
          render bbox =
-  { render ; bbox ; on_click ; on_sub_click ; on_hover ; on_unhover ;
+  { render ; bbox ; on_click ; on_sub_click ; on_hover ;
     on_drag_start ; on_drag ; on_drag_stop ; position }
 
 let handler_for_event s = function
@@ -32,8 +31,7 @@ let handler_for_event s = function
   | DragStart -> s.on_drag_start
   | Drag -> s.on_drag
   | DragStop -> s.on_drag_stop
-  | HoverStart -> s.on_hover
-  | HoverStop -> s.on_unhover
+  | Hover -> s.on_hover
 
 let print fmt s =
   Format.fprintf fmt "@[Shape(@[bbox=%a"
