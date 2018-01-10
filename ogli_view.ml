@@ -44,12 +44,12 @@ struct
     { desc = { name ; last_changed = clock () } ; value ; on_update }
 
   let change p =
+    List.iter (fun f -> f ()) p.on_update ;
     p.desc.last_changed <- clock ()
 
   let set p v =
-    change p ;
     p.value <- v ;
-    List.iter (fun f -> f ()) p.on_update
+    change p
 
   let on_update p f =
     assert (List.for_all (fun f' -> f != f') p.on_update) ;
