@@ -5,10 +5,10 @@ open Ogli
 type t =
   { render : Point.t -> Bbox.t option -> unit ;
     bbox : Bbox.t ; (* regardless of position *)
-    on_click : (Point.t -> unit) option ;
+    on_click : (bool -> Point.t -> unit) option ;
     (* on_sub_click is called even when the click is for a deeper component.
      * When set, on_click is called only for clicks falling on this shape. *)
-    on_sub_click : (Point.t -> unit) option ;
+    on_sub_click : (bool -> Point.t -> unit) option ;
     on_hover : (Point.t -> unit) option ;
     on_drag_start : (Point.t -> unit) option ;
     on_drag : (Point.t -> unit) option ;
@@ -27,7 +27,8 @@ let make ?on_click ?on_sub_click ?on_hover
     on_drag_start ; on_drag ; on_drag_stop ; position }
 
 let handler_for_event s = function
-  | Click -> s.on_click
+  | Click -> Lr44.option_map (fun f -> f false) s.on_click
+  | ShiftClick -> Lr44.option_map (fun f -> f true) s.on_click
   | DragStart -> s.on_drag_start
   | Drag -> s.on_drag
   | DragStop -> s.on_drag_stop

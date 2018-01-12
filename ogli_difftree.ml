@@ -182,8 +182,8 @@ let rec map f t =
 
 let rec iter_depth_first f t =
   List.iter (iter_depth_first f) t.children ;
-  Lr44.option_may t.head (fun (s, _) -> f s)
+  Lr44.option_may (fun (s, _) -> f s) t.head
 
 let rec iter_breadth_first f t =
-  Lr44.option_may t.head (fun (s, _) -> f s) ;
+  Lr44.option_may (fun (s, _) -> f s) t.head ;
   List.iter (iter_breadth_first f) t.children

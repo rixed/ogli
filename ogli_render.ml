@@ -17,7 +17,14 @@ let set_pos pos =
 
 let of_polys polys =
   (* TODO: build triangle fans instead *)
-  let polys = Algo.triangulate polys in
+  let polys =
+    try Algo.triangulate polys
+    with e ->
+      Format.printf "Skipping polys %a because of %s\n%s@."
+        (Lr44.list_print Poly.print) polys
+        (Printexc.to_string e)
+        (Printexc.get_backtrace ()) ;
+      [] in
   let len, polys =
     List.fold_left (fun (l, ps as prev) p ->
       let len = Poly.length p in
@@ -65,7 +72,8 @@ let of_col_polys col_polys =
 let of_text ?(move_to_lower_left=false) text size =
   let word = Word.make text in
   (* font_height should be in pixels: *)
-  let font_height = Text_impl.face_info.Freetype.pixel_height in
+  let _face, face_info = Text_impl.get_face () in
+  let font_height = face_info.Freetype.pixel_height in
   let scale = size /. font_height in
   let move_to_ll =
     if move_to_lower_left then
@@ -100,6 +108,7 @@ let display = G.swap_buffers
 let rec next_event =
   let drag_start = ref None
   and drag_signaled = ref false
+  and drag_shifted = ref false
   and click_pos x y w h =
     (* We are given the X11 coordinates but we expect viewport coordinates: *)
     let m = G.get_projection () in
@@ -108,15 +117,16 @@ let rec next_event =
   in
   fun ~wait ~on_event ~on_remap ->
     match G.next_event wait with
-    | Some (G.Clic (x, y, w, h)) ->
+    | Some (G.Clic (x, y, w, h, shifted)) ->
         let pos = click_pos x y w h in
         (match !drag_start with
         | None ->
             assert (not !drag_signaled) ;
-            drag_start := Some pos
+            drag_start := Some pos ;
+            drag_shifted := shifted
         (* User managed do get a click through while dragging, using another button.
          * So that's a click event. *)
-        | Some _ -> on_event Click pos)
+        | Some _ -> on_event (if shifted then ShiftClick else Click) pos)
     | Some (G.UnClic (x, y, w, h)) ->
         let stop = click_pos x y w h in
         (match !drag_start with
@@ -128,7 +138,7 @@ let rec next_event =
               drag_signaled := false ;
             ) else (
               (* Just a click *)
-              on_event Click start
+              on_event (if !drag_shifted then ShiftClick else Click) start
             ) ;
             drag_start := None)
     | Some (G.Move (x, y, w, h)) ->
@@ -158,10 +168,13 @@ let resize ?(y_down=false) width height =
   G.set_projection proj ;
   G.set_viewport 0 0 width height
 
-let init ?(title="OGli") ?y_down ?(double_buffer=false)
+let init ?(title="OGli") ?y_down ?double_buffer ?msaa ?font
          width height =
-  G.init ~depth:false ~alpha:true ~double_buffer title width height ;
+  G.init ~depth:false ~alpha:true ?double_buffer ?msaa title width height ;
   at_exit (fun () -> G.exit ()) ;
+  (match font with
+  | None -> ()
+  | Some file -> Text_impl.font_files := [ file ]) ;
   resize ?y_down width height ;
   set_pos Point.origin ;
   G.clear ~color:C.black ()

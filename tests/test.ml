@@ -5,8 +5,8 @@ open Ogli_view
 let screen_width = Param.make "screen width" 800
 let screen_height = Param.make "screen height" 600
 let nb_leaves = Param.make "nb leaves" 5
-let grow_leaf _ = Param.set nb_leaves (nb_leaves.value + 1)
-let pick_leaf _ =
+let grow_leaf _ _ = Param.set nb_leaves (nb_leaves.value + 1)
+let pick_leaf _ _ =
   if nb_leaves.value > 0 then
     Param.set nb_leaves (nb_leaves.value - 1)
 
@@ -69,16 +69,16 @@ let flower ~res ~height ~jiggling ~base =
 let () =
   (* Window size will be width*height, with (0,0) on the bottom left corner
    * and visible triangles are counter-clockwise. *)
-  let double_buffer = true in
+  let double_buffer = true and msaa = true in
   (* This is the user's job to init since we could have plenty of views. *)
-  Ogli_render.init ~title:"OGLI test" ~double_buffer
+  Ogli_render.init ~title:"OGLI test" ~double_buffer ~msaa
                    screen_width.value screen_height.value ;
   (* Parameters: *)
   let flower_height_phase = Param.make "flower height phase" 0. in
   let jiggling = Param.make "leaves jiggling phase" 0. in
   (* Event handler: *)
   let quit = ref false in
-  let on_click _ = quit := true in
+  let on_click _ _ = quit := true in
   (* Picture depending on those parameters: *)
   let pic =
     fun_of screen_width (fun screen_w ->

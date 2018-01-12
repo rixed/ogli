@@ -22,10 +22,11 @@ let v (x : float) (y : float) : V.t = [| x ; y |]
 let c (r : float) (g : float) (b : float) : C.t = [| r ; g ; b ; 1. |]
 let ca (r : float) (g : float) (b : float) (a : float) : C.t = [| r ; g ; b ; a |]
 
-type event = Click | DragStart | Drag | DragStop | Hover
+type event = Click | ShiftClick | DragStart | Drag | DragStop | Hover
 
 let string_of_event = function
   | Click -> "Click"
+  | ShiftClick -> "ShiftClick"
   | DragStart -> "DragStart"
   | Drag -> "Drag"
   | DragStop -> "DragStop"
