@@ -11,6 +11,8 @@
 open Ogli
 open K.Infix
 
+let debug = false
+
 (* Set modelview from a camera that sits comfortably at z=0.5.
  * Note that all shape positions are absolute! *)
 let set_pos pos =
@@ -22,17 +24,19 @@ let of_polys polys =
   let polys =
     try Algo.triangulate polys
     with e ->
-      Format.printf "Skipping polys %a because of %s\n%s@."
-        (Lr44.list_print Poly.print) polys
-        (Printexc.to_string e)
-        (Printexc.get_backtrace ()) ;
+      if debug then
+        Format.printf "Skipping polys %a because of %s\n%s@."
+          (Lr44.list_print Poly.print) polys
+          (Printexc.to_string e)
+          (Printexc.get_backtrace ()) ;
       [] in
   let len, polys =
     List.fold_left (fun (l, ps as prev) p ->
       let len = Poly.length p in
       if len <> 3 then (
-        Format.eprintf "Not a triangle: %a@ (triangulated from@ %a)@."
-          Poly.print p Poly.print_list orig_polys ;
+        if debug then
+          Format.eprintf "Not a triangle: %a@ (triangulated from@ %a)@."
+            Poly.print p Poly.print_list orig_polys ;
         prev
       ) else (
         l + len, p :: ps
