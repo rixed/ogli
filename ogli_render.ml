@@ -164,7 +164,8 @@ let rec next_event =
               on_event Drag pos
             else
               if Point.distance pos start >~ min_drag_dist then (
-                on_event DragStart start ;
+                on_event (if !drag_shifted then ShiftDragStart
+                                           else DragStart) start ;
                 on_event Drag pos ;
                 drag_signaled := true
               ))

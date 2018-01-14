@@ -27,12 +27,14 @@ let vf (x : float) (y : float) : V.t = [| K.of_float x ; K.of_float y |]
 let c (r : float) (g : float) (b : float) : C.t = [| r ; g ; b (*; 1. *) |]
 (*let ca (r : float) (g : float) (b : float) (a : float) : C.t = [| r ; g ; b ; a |]*)
 
-type event = Click | ShiftClick | DragStart | Drag | DragStop | Hover
+type event = Click | ShiftClick | DragStart | ShiftDragStart
+           | Drag | DragStop | Hover
 
 let string_of_event = function
   | Click -> "Click"
   | ShiftClick -> "ShiftClick"
   | DragStart -> "DragStart"
+  | ShiftDragStart -> "ShiftDragStart"
   | Drag -> "Drag"
   | DragStop -> "DragStop"
   | Hover -> "Hover"

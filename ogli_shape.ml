@@ -10,7 +10,7 @@ type t =
      * When set, on_click is called only for clicks falling on this shape. *)
     on_sub_click : (bool -> Point.t -> unit) option ;
     on_hover : (Point.t -> unit) option ;
-    on_drag_start : (Point.t -> unit) option ;
+    on_drag_start : (bool -> Point.t -> unit) option ;
     on_drag : (Point.t -> unit) option ;
     on_drag_stop : (Point.t -> unit) option ;
     (* TODO: on_focus, on_input... *)
@@ -29,7 +29,8 @@ let make ?on_click ?on_sub_click ?on_hover
 let handler_for_event s = function
   | Click -> Lr44.option_map (fun f -> f false) s.on_click
   | ShiftClick -> Lr44.option_map (fun f -> f true) s.on_click
-  | DragStart -> s.on_drag_start
+  | DragStart -> Lr44.option_map (fun f -> f false) s.on_drag_start
+  | ShiftDragStart -> Lr44.option_map (fun f -> f true) s.on_drag_start
   | Drag -> s.on_drag
   | DragStop -> s.on_drag_stop
   | Hover -> s.on_hover
