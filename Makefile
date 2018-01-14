@@ -6,7 +6,7 @@ LINKED_FOR_TESTS = \
 	lr44.ml ogli_difftree.ml
 
 OGLILIB_SOURCES = \
-	lr44.ml ogli.ml ogli_difftree.ml ogli_shape.ml \
+	lr44.ml ogli_glspec.ml ogli.ml ogli_difftree.ml ogli_shape.ml \
 	ogli_view.ml ogli_render.ml
 
 NAME = ogli

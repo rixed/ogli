@@ -9,14 +9,16 @@
  * So for instance, we do not have a simple `circle x y rad col` but rather a `circle x y rad col some_state`
  *)
 open Ogli
+open K.Infix
 
 (* Set modelview from a camera that sits comfortably at z=0.5.
  * Note that all shape positions are absolute! *)
 let set_pos pos =
-  G.set_modelview (M.translate pos.(0) pos.(1) ~-.0.5)
+  G.set_modelview (M.translate pos.(0) pos.(1) (K.of_float ~-.0.5))
 
 let of_polys polys =
   (* TODO: build triangle fans instead *)
+  let orig_polys = polys in (* for debug *)
   let polys =
     try Algo.triangulate polys
     with e ->
@@ -29,7 +31,8 @@ let of_polys polys =
     List.fold_left (fun (l, ps as prev) p ->
       let len = Poly.length p in
       if len <> 3 then (
-        Format.eprintf "Not a triangle: %a@." Poly.print p ;
+        Format.eprintf "Not a triangle: %a@ (triangulated from@ %a)@."
+          Poly.print p Poly.print_list orig_polys ;
         prev
       ) else (
         l + len, p :: ps
@@ -50,11 +53,17 @@ let of_polys polys =
       G.disable_scissor () ;
       do_render ()
     | Some Bbox.Box (pmin, pmax) ->
-      let x0 = int_of_float pmin.(0)
-      and y0 = int_of_float pmin.(1)
-      and x1 = int_of_float (ceil pmax.(0))
-      and y1 = int_of_float (ceil pmax.(1)) in
-      G.set_scissor x0 y0 (x1-x0+1) (y1-y0+1) ;
+      let x0 = K.to_int pmin.(0)
+      and y0 = K.to_int pmin.(1)
+      and x1 = K.to_int (K.add K.one pmax.(0))
+      and y1 = K.to_int (K.add K.one pmax.(1)) in
+      (* As the Bbox captures only the geometry not the rendering, we could
+       * occasionally draw outside the bounding box (coordinates are within
+       * the bbox but any thick lines/dots or aliasing could cause pixels
+       * lying outside of the box to be painted as well. Therefore we
+       * enlarge the scissor box a bit: *)
+      let x0 = x0-2 and y0 = y0-2 and x1 = x1+2 and y1 = y1+2 in
+      G.set_scissor x0 y0 (1+x1-x0) (1+y1-y0) ;
       do_render ()
     | Some Bbox.Empty -> ()
 
@@ -74,7 +83,7 @@ let of_text ?(move_to_lower_left=false) text size =
   (* font_height should be in pixels: *)
   let _face, face_info = Text_impl.get_face () in
   let font_height = face_info.Freetype.pixel_height in
-  let scale = size /. font_height in
+  let scale = K.of_float (size /. font_height) in
   let move_to_ll =
     if move_to_lower_left then
       Word.lower_left_to_origin word
@@ -83,7 +92,7 @@ let of_text ?(move_to_lower_left=false) text size =
     (* We must convert to polys in the glyph space regardless of scale
      * or the bezier curves might be wrong. After the scale we should
      * lower the vertex resolution though. *)
-    Word.to_polys ~res:1. word |>
+    Word.to_polys ~res:K.one word |>
     List.map (fun (pos, polys) ->
       Point.addi pos move_to_ll ;
       Algo.translate_poly pos polys) |>
@@ -113,7 +122,7 @@ let rec next_event =
     (* We are given the X11 coordinates but we expect viewport coordinates: *)
     let m = G.get_projection () in
     G.unproject (0, 0, w, h) m x (h - y)
-  and min_drag_dist = 10. (* how many pixels we have to drag for a drag to be considered *)
+  and min_drag_dist = K.of_int 10 (* how many pixels we have to drag for a drag to be considered *)
   in
   fun ~wait ~on_event ~on_remap ->
     match G.next_event wait with
@@ -150,7 +159,7 @@ let rec next_event =
             if !drag_signaled then
               on_event Drag pos
             else
-              if Point.distance pos start > min_drag_dist then (
+              if Point.distance pos start >~ min_drag_dist then (
                 on_event DragStart start ;
                 on_event Drag pos ;
                 drag_signaled := true
@@ -162,9 +171,9 @@ let resize ?(y_down=false) width height =
   let proj =
     let z_near = K.neg K.one and z_far = K.one in
     if y_down then
-      M.ortho 0. (K.of_int width) (K.of_int height) 0. z_near z_far
+      M.ortho K.zero (K.of_int width) (K.of_int height) K.zero z_near z_far
     else
-      M.ortho 0. (K.of_int width) 0. (K.of_int height) z_near z_far in
+      M.ortho K.zero (K.of_int width) K.zero (K.of_int height) z_near z_far in
   G.set_projection proj ;
   G.set_viewport 0 0 width height
 

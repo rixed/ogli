@@ -111,7 +111,7 @@ type t =
     height : int Param.t ;
     mutable frame_num : int (* since last time our backbuffer was lost *) }
 
-let make ?(min_coord = p 0. 0.) ?(max_coord = p 1. 1.)
+let make ?(min_coord = p K.zero K.zero) ?(max_coord = p K.one K.one)
          ~width ~height
          ?(double_buffer = false)
          tree =
@@ -204,10 +204,6 @@ let next_event t get_event on_resize =
     if debug && event <> Hover && event <> Drag then
       Format.printf "Event %a at %a!@." print_event event Point.print pos ;
     try
-      (*if event = Hover then (
-        let now = Unix.gettimeofday () in
-        if now -. !last_move_event < 0.3 then raise Exit ;
-        last_move_event := now) ;*)
       (* Like iter_depth_first, but with some additional exception
        * handlers for on_sub_click callbacks: *)
       let rec look_for_handler tree =
@@ -239,7 +235,7 @@ let next_event t get_event on_resize =
       let dt = stop -. start in
       if dt > !max_dt then (
         max_dt := dt ;
-        Format.printf "event dt = %f@." dt
+        if debug then Format.printf "event dt = %f@." dt
       )
     with Exit -> ()
   and on_remap w h =
