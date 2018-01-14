@@ -7,7 +7,7 @@ QTEST      = qtest
 JSOO       = js_of_ocaml.exe
 WARNS      = -w -40 # -w Ael-31-41-42-44-45-48
 override OCAMLOPTFLAGS += $(INCS) $(WARNS) -g -annot -O2
-override OCAMLFLAGS    += $(INCS) $(WARNS) -g -annot 
+override OCAMLFLAGS    += $(INCS) $(WARNS) -g -annot
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .cmxs .annot .top .js
