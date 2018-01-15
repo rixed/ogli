@@ -98,7 +98,7 @@ let of_text ?(move_to_lower_left=false) text size =
      * lower the vertex resolution though. *)
     Word.to_polys ~res:K.one word |>
     List.map (fun (pos, polys) ->
-      Point.addi pos move_to_ll ;
+      let pos = Point.add pos move_to_ll in
       Algo.translate_poly pos polys) |>
     List.concat |>
     Algo.scale_poly scale in
