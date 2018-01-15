@@ -7,8 +7,10 @@ let debug = false
 module Dim = Dim2
 module CDim = Dim3
 
-(* Do computations with integers of 5 bits of decimals: *)
-module K = Algen_impl.BigNumField (struct let v = 16 end)
+(* Do computations with integers of 18 bits of decimals so
+ * that we have integer geometry with enough precision of the
+ * projection matrix: *)
+module K = Algen_impl.BigNumField (struct let v = 18 end)
 (*module K = Algen_impl.FloatField*)
 
 (* Even though we use integers for geometry, glop for opengl
