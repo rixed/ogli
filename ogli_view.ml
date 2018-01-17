@@ -35,12 +35,7 @@ struct
     { desc : desc ; mutable value : 'a ;
       mutable on_update : (unit -> unit) list }
 
-  let make ?on_update name value =
-    let on_update =
-      match on_update with
-      | None -> []
-      | Some f -> [ f ]
-    in
+  let make ?(on_update=[]) name value =
     { desc = { name ; last_changed = clock () } ; value ; on_update }
 
   let change p =
