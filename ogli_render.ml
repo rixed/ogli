@@ -18,7 +18,7 @@ let debug = false
 let set_pos pos =
   G.set_modelview (M.translate pos.(0) pos.(1) (K.of_float ~-.0.5))
 
-let of_polys polys =
+let of_polys ?track polys =
   (* TODO: build triangle fans instead *)
   let orig_polys = polys in (* for debug *)
   let polys =
@@ -49,6 +49,10 @@ let of_polys polys =
       )) 0 polys in
   assert (len = len') ;
   fun ~color pos bbox -> (* bbox is already positioned *)
+    if track = Some true then Format.printf "render pos=%a bbox=%a@."
+      Point.print pos
+      (fun pp -> function None -> Format.fprintf pp "None"
+                        | Some b -> Bbox.print pp b) bbox ;
     let do_render () =
       set_pos pos ;
       G.render G.Triangles varr (G.Uniq color) in
@@ -71,12 +75,12 @@ let of_polys polys =
       do_render ()
     | Some Bbox.Empty -> ()
 
-let of_col_polys col_polys =
+let of_col_polys ?track col_polys =
   let renderers, bbox =
     List.fold_left (fun (rs, bbs) (color, polys) ->
-        of_polys polys ~color :: rs,
-        Bbox.union bbs (Algo.bbox polys)
-      ) ([], Bbox.empty) col_polys in
+      of_polys ?track polys ~color :: rs,
+      Bbox.union bbs (Algo.bbox polys)
+    ) ([], Bbox.empty) col_polys in
   let renderers = List.rev renderers in
   let render pos bbox =
     List.iter (fun r -> r pos bbox) renderers in
@@ -105,9 +109,9 @@ let of_text ?(move_to_lower_left=false) text size =
   of_polys polys,
   Algo.bbox polys
 
-let shape_of_polys ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag col_polys position children =
-  let render, bbox = of_col_polys col_polys in
-  Ogli_view.shape (Ogli_shape.make ~position ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag render bbox) children
+let shape_of_polys ?track ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag col_polys position children =
+  let render, bbox = of_col_polys ?track col_polys in
+  Ogli_view.shape (Ogli_shape.make ?track ~position ?on_click ?on_sub_click ?on_hover ?on_drag_start ?on_drag_stop ?on_drag render bbox) children
 
 (* Here position is the position of the beginning of the baseline (the origin of the glyph, where the pen starts).
  * Set move_to_lower_left if the position you pass is actually the lower left corner of where you want that text to be. *)

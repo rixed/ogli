@@ -143,8 +143,11 @@ let render_cmds t cmds =
   List.rev cmds |>
   List.iter (function
     | Add s ->
+      if s.track then Format.printf "Add %a@." Ogli_shape.print s ;
       s.render s.position None
-    | Del s -> delete t s)
+    | Del s ->
+      if s.track then Format.printf "Del %a@." Ogli_shape.print s ;
+      delete t s)
 
 let add item cmd =
   match item with

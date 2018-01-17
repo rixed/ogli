@@ -17,14 +17,24 @@ type t =
     (* We have position (TODO: and we could also have axis) so that we could
      * move the shape with a simple operation.
      * This position is relative to the parent though. *)
-    position : Point.t }
+    position : Point.t ;
+    track : bool }
 
-let make ?on_click ?on_sub_click ?on_hover
+let print fmt s =
+  Format.fprintf fmt "@[Shape(@[bbox=%a@ pos=%a@])@]"
+    Bbox.print s.bbox
+    Point.print s.position ;
+  if s.on_click <> None then Format.fprintf fmt "@;on_click" ;
+  Format.fprintf fmt "@])@]"
+
+let make ?(track=false) ?on_click ?on_sub_click ?on_hover
          ?on_drag_start ?on_drag ?on_drag_stop
          ?(position = Point.origin)
          render bbox =
-  { render ; bbox ; on_click ; on_sub_click ; on_hover ;
-    on_drag_start ; on_drag ; on_drag_stop ; position }
+  let s = { track ; render ; bbox ; on_click ; on_sub_click ; on_hover ;
+    on_drag_start ; on_drag ; on_drag_stop ; position } in
+  if track then Format.printf "Create %a@." print s ;
+  s
 
 let handler_for_event s = function
   | Click -> Lr44.option_map (fun f -> f false) s.on_click
@@ -34,9 +44,3 @@ let handler_for_event s = function
   | Drag -> s.on_drag
   | DragStop -> s.on_drag_stop
   | Hover -> s.on_hover
-
-let print fmt s =
-  Format.fprintf fmt "@[Shape(@[bbox=%a"
-    Bbox.print (Bbox.translate s.bbox s.position) ;
-  if s.on_click <> None then Format.fprintf fmt "@;on_click" ;
-  Format.fprintf fmt "@])@]"
